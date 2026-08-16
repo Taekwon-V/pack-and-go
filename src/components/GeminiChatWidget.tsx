@@ -18,7 +18,8 @@ export default function GeminiChatWidget({ destination }: { destination: string 
     ]
   });
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  console.log('MESSAGES_DUMP:', JSON.stringify(messages));
+  if(typeof window !== 'undefined') window.MY_CHAT = { messages, sendMessage, status, error }; const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,10 +68,10 @@ export default function GeminiChatWidget({ destination }: { destination: string 
                   : 'bg-slate-50 text-slate-800 border-slate-200 rounded-tl-sm'
               }`}>
                 {/* Render text with basic formatting support (newlines to br) */}
-                {(m.content || '').split('\n').map((line, i) => (
+                {(m.content || (m.parts ? m.parts.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('') : '')).split('\n').map((line, i, arr) => (
                   <span key={i}>
                     {line}
-                    {i !== (m.content || '').split('\n').length - 1 && <br />}
+                    {i !== arr.length - 1 && <br />}
                   </span>
                 ))}
               </div>
