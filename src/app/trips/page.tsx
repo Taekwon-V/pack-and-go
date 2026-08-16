@@ -6,6 +6,7 @@ import { collection, query, or, where, getDocs, doc, getDoc } from 'firebase/fir
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plane, Calendar, MapPin, Loader2 } from 'lucide-react';
 
 interface Trip {
@@ -82,8 +83,14 @@ export default function TripsPage() {
   return (
     <div className="min-h-screen bg-[#111111] p-8">
       <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-12 mb-8">
+          <Image src="/logo.jpg" alt="Pack to GO" width={140} height={140} className="rounded-[2.5rem] shadow-2xl shadow-emerald-500/10 mb-6 border border-white/5" />
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Pack to GO</h2>
+          <p className="text-gray-400 mt-3 font-medium">세상을 탐험하고, 여정을 공유하세요.</p>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">내 여행</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">내 여행 탐색</h1>
           <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg shadow-emerald-900/20 flex items-center gap-2">
             <Plane className="w-4 h-4" />
             새 여행 만들기

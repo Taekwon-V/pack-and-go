@@ -39,8 +39,7 @@ export default function Navbar() {
               href="/" 
               className="flex items-center gap-3 text-xl font-bold tracking-tighter text-white transition-colors hover:text-gray-300"
             >
-              <Image src="/logo.jpg" alt="Tour Logo" width={32} height={32} className="rounded-md" />
-              Tour
+              Pack to GO
             </Link>
             <nav className="hidden md:flex gap-6">
               {navLinks.map((link) => {
