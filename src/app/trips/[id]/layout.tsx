@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Home, CalendarDays, Wallet, Users, ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { use } from 'react';
+import { TripProvider } from '@/components/trip/TripContext';
 
 export default function TripLayout({
   children,
@@ -62,7 +63,9 @@ export default function TripLayout({
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="h-full bg-[#f5f5f9]">
-          {children}
+          <TripProvider tripId={id}>
+            {children}
+          </TripProvider>
         </div>
       </main>
     </div>
