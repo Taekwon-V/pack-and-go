@@ -101,11 +101,10 @@ export default function TripOverviewTab({ trip, mapUrl }: { trip: any, mapUrl: s
         {/* Gallery Carousel */}
         {(() => {
           const gallery = trip.gallery && trip.gallery.length > 0 ? trip.gallery : [
-            'https://images.unsplash.com/photo-1598134493179-51332e56807f?q=80&w=800&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1510619888924-11e2f4a56a64?q=80&w=800&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1590219660855-6cb3ee33b2fc?q=80&w=800&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1616766432415-68ffbbff8cb7?q=80&w=800&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1629806443493-27eb6ba92bf1?q=80&w=800&auto=format&fit=crop'
+            '/gallery/1.jpg',
+            '/gallery/2.png',
+            '/gallery/3.jpg',
+            '/gallery/4.jpg'
           ];
           return (
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
