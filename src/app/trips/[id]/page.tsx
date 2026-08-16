@@ -102,7 +102,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
   const displayUsers = uniqueParticipants.slice(0, 6);
   const extraCount = uniqueParticipants.length - 6;
 
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trip.mapQuery || trip.destination)}&z=11&output=embed`;
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trip.mapQuery || trip.destination)}&z=9&output=embed`;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
@@ -187,7 +187,24 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
 
             {/* Description */}
             <p className="text-slate-700 leading-relaxed mb-8">
-              {trip.destinationDesc || `${trip.destination}에 대한 멋진 설명을 기대해 주세요!`}
+              {trip.destinationDesc ? (
+                trip.destinationDesc.split('\n').map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    <br />
+                  </span>
+                ))
+              ) : trip.destination.includes('오키나와') ? (
+                <>
+                  오키나와는 일본 최남단에 위치한 아열대 기후의 섬으로, 에메랄드빛 바다와 산호초가 펼쳐진 아름다운 자연 경관을 자랑합니다.<br />
+                  과거 류큐 왕국 시대의 독자적인 역사와 문화를 간직하고 있어, 일본 본토와는 다른 이국적이고 매력적인 분위기를 느낄 수 있습니다.<br />
+                  미군의 영향으로 형성된 아메리칸 빌리지 등 독특한 사회적 융합 문화가 곳곳에 스며들어 있어 색다른 볼거리를 제공합니다.<br />
+                  세계적인 수준의 다이빙 포인트와 따뜻한 날씨 덕분에 사계절 내내 해양 스포츠와 휴양을 즐기기에 최적의 조건을 갖추고 있습니다.<br />
+                  슈리성 같은 역사 유적 탐방부터, 아름다운 해변 휴양, 그리고 츄라우미 수족관 같은 명소까지 가족 단위 여행객에게 완벽한 여행지입니다.
+                </>
+              ) : (
+                `${trip.destination}에 대한 멋진 설명을 기대해 주세요!`
+              )}
             </p>
 
             {/* Weather & Clothing */}
