@@ -6,7 +6,8 @@ import { Bot, Send, User, Sparkles, AlertCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export default function GeminiChatWidget({ destination }: { destination: string }) {
-  const { messages, input, handleInputChange, handleSubmit, status, error } = useChat({
+  const [input, setInput] = useState('');
+  const { messages, sendMessage, status, error } = useChat({
     api: '/api/chat',
     initialMessages: [
       {
@@ -95,18 +96,21 @@ export default function GeminiChatWidget({ destination }: { destination: string 
 
       {/* Input Form */}
       <form onSubmit={(e) => {
-        handleSubmit(e, { data: { destination } });
+        e.preventDefault();
+        if (!(input || '').trim() || status === 'submitted' || status === 'streaming' || error != null) return;
+        sendMessage({ role: 'user', content: input }, { data: { destination } });
+        setInput('');
       }} className="p-4 bg-white border-t border-slate-200">
         <div className="relative flex items-center">
           <input
             value={input || ''}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 if (!(input || '').trim() || status === 'submitted' || status === 'streaming' || error != null) return;
-                // Trigger form submission
-                e.currentTarget.form?.requestSubmit();
+                sendMessage({ role: 'user', content: input }, { data: { destination } });
+                setInput('');
               }
             }}
             placeholder={`${destination}에 대해 질문해보세요...`}
