@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.44",
+    "@ai-sdk/react": "^4.0.69",
+    "@google/generative-ai": "^0.24.1",
+    "ai": "^7.0.66",
     "firebase": "^12.17.1",
     "firebase-admin": "^14.2.0",
     "lucide-react": "^1.31.0",

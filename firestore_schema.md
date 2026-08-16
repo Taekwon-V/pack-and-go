@@ -27,6 +27,12 @@ Stores top-level information about travel plans.
   - `createdAt` (timestamp)
   - `updatedAt` (timestamp)
   - `status` (string) - e.g., "planning", "active", "completed"
+  - `concept` (string, optional) - e.g., "맛집을 찾아 떠나는 여행"
+  - `mapQuery` (string, optional) - e.g., "Okinawa, Japan"
+  - `destinationDesc` (string, optional)
+  - `weatherDesc` (string, optional)
+  - `clothingDesc` (string, optional)
+  - `gallery` (array of strings, optional) - URLs of destination placeholder photos
 
 ### 3. `itineraries` (Sub-collection under `trips`)
 Stores daily schedules and activities for a trip.
