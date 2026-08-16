@@ -8,9 +8,9 @@ export default function TripOverviewPage() {
   const { trip, mapUrl } = useTrip();
 
   return (
-    <>
+    <div className="space-y-8">
       <TripHeader />
       <TripOverviewTab trip={trip} mapUrl={mapUrl} />
-    </>
+    </div>
   );
 }
