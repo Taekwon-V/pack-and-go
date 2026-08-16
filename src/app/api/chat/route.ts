@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 export async function POST(req: Request) {
   try {
     const { messages, data } = await req.json();
+    console.log('INCOMING MESSAGES:', JSON.stringify(messages, null, 2));
     const destination = data?.destination || '여행지';
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -21,10 +22,21 @@ export async function POST(req: Request) {
       apiKey: apiKey,
     });
 
+    const coreMessages = messages.map((m: any) => {
+      let content = m.content;
+      if (!content && m.parts) {
+        content = m.parts.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('\n');
+      }
+      return {
+        role: m.role,
+        content: content || ''
+      };
+    });
+
     const result = await streamText({
       model: google('gemini-2.5-flash'),
       system: systemInstruction,
-      messages,
+      messages: coreMessages,
     });
 
     return result.toUIMessageStreamResponse();
