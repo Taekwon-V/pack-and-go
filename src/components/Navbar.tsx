@@ -41,27 +41,6 @@ export default function Navbar() {
             >
               Pack to GO
             </Link>
-            <nav className="hidden md:flex gap-6">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link 
-                    key={link.name}
-                    href={link.href} 
-                    className={`text-sm font-medium transition-all duration-200 ease-in-out relative py-1 ${
-                      isActive 
-                        ? 'text-emerald-500' 
-                        : 'text-gray-400 hover:text-emerald-400'
-                    }`}
-                  >
-                    {link.name}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-0 w-full h-[2px] bg-emerald-500 rounded-full" />
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
           
           <div className="flex items-center gap-4">
