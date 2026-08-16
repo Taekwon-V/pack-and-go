@@ -109,7 +109,12 @@ export default function TripsPage() {
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-gray-300 shadow-sm border border-white/10">
-                        D-{Math.max(0, Math.ceil((new Date(trip.startDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))}
+                        D-{(() => {
+                          const sd = trip.startDate as any;
+                          const dateObj = sd?.toDate ? sd.toDate() : new Date(sd || Date.now());
+                          const diff = dateObj.getTime() - new Date().getTime();
+                          return Math.max(0, Math.ceil(diff / (1000 * 3600 * 24))) || 0;
+                        })()}
                       </div>
                     </div>
                     
@@ -121,7 +126,13 @@ export default function TripsPage() {
                     
                     <div className="flex items-center text-sm text-gray-400 bg-black/20 rounded-xl p-3 border border-white/5">
                       <Calendar className="w-4 h-4 mr-2 text-emerald-500" />
-                      {trip.startDate} ~ {trip.endDate}
+                      {(() => {
+                        const sd = trip.startDate as any;
+                        const ed = trip.endDate as any;
+                        const sStr = sd?.toDate ? sd.toDate().toLocaleDateString() : (sd || '');
+                        const eStr = ed?.toDate ? ed.toDate().toLocaleDateString() : (ed || '');
+                        return `${sStr} ~ ${eStr}`;
+                      })()}
                     </div>
                   </div>
                 </div>
