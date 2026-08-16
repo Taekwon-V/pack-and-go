@@ -24,15 +24,15 @@ export default function TripLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#f5f5f9] flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col shrink-0 sticky top-16 md:top-0 md:h-screen z-40">
-        <div className="hidden md:block p-6 border-b border-gray-200">
-          <Link href="/trips" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-emerald-600 transition-colors mb-6 group">
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 sticky top-16 md:top-0 md:h-screen z-40">
+        <div className="hidden md:block p-6 border-b border-slate-200">
+          <Link href="/trips" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors mb-6 group">
             <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
             홈으로 이동
           </Link>
-          <h2 className="text-xl font-bold text-gray-900">여행 관리</h2>
+          <h2 className="text-xl font-bold text-slate-900">여행 관리</h2>
         </div>
         
         <nav className="flex flex-row md:flex-col flex-1 p-2 md:p-4 gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-y-auto whitespace-nowrap no-scrollbar justify-around md:justify-start">
@@ -47,11 +47,11 @@ export default function TripLayout({
                 title={item.name}
                 className={`flex items-center justify-center md:justify-start px-4 py-3 md:py-3 text-sm font-medium rounded-xl transition-all ${
                   isActive
-                    ? 'bg-emerald-50 text-emerald-600 md:border-l-4 md:border-emerald-500'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 md:border-l-4 md:border-transparent'
+                    ? 'bg-indigo-50 text-indigo-600 md:border-l-4 md:border-indigo-500'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 md:border-l-4 md:border-transparent'
                 }`}
               >
-                <Icon className={`w-5 h-5 md:mr-3 ${isActive ? 'text-emerald-500' : 'text-gray-500'}`} />
+                <Icon className={`w-5 h-5 md:mr-3 ${isActive ? 'text-indigo-500' : 'text-slate-500'}`} />
                 <span className="hidden md:inline">{item.name}</span>
               </Link>
             );
@@ -61,7 +61,7 @@ export default function TripLayout({
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="h-full bg-[#faf9f6]">
+        <div className="h-full bg-[#f5f5f9]">
           {children}
         </div>
       </main>

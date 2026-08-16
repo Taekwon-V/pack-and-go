@@ -31,13 +31,13 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-xl">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link 
               href="/" 
-              className="flex items-center gap-3 text-xl font-bold tracking-tighter text-gray-900 transition-colors hover:text-gray-600"
+              className="flex items-center gap-3 text-xl font-bold tracking-tighter text-slate-900 transition-colors hover:text-slate-600"
             >
               Pack to GO
             </Link>
@@ -48,22 +48,22 @@ export default function Navbar() {
               user ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-900/50 text-sm font-bold text-emerald-400">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-900/50 text-sm font-bold text-indigo-400">
                       {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
                     </div>
-                    <span className="hidden text-sm font-medium text-gray-700 sm:block">
+                    <span className="hidden text-sm font-medium text-slate-700 sm:block">
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
                   </div>
                   <button 
                     onClick={handleLogout}
-                    className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
                   >
                     로그아웃
                   </button>
                 </div>
               ) : (
-                <Link href="/login" className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600">
+                <Link href="/login" className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                   로그인
                 </Link>
               )
