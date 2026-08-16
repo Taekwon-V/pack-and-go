@@ -31,13 +31,13 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#18181b]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-xl">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link 
               href="/" 
-              className="flex items-center gap-3 text-xl font-bold tracking-tighter text-white transition-colors hover:text-gray-300"
+              className="flex items-center gap-3 text-xl font-bold tracking-tighter text-gray-900 transition-colors hover:text-gray-600"
             >
               Pack to GO
             </Link>
@@ -51,13 +51,13 @@ export default function Navbar() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-900/50 text-sm font-bold text-emerald-400">
                       {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
                     </div>
-                    <span className="hidden text-sm font-medium text-gray-300 sm:block">
+                    <span className="hidden text-sm font-medium text-gray-700 sm:block">
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
                   </div>
                   <button 
                     onClick={handleLogout}
-                    className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                    className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     로그아웃
                   </button>

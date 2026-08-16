@@ -80,8 +80,8 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
   if (!trip) {
     return (
       <div className="flex-1 p-8 flex items-center justify-center">
-        <div className="bg-[#18181b] p-8 rounded-3xl shadow-sm text-center max-w-md w-full border border-white/5">
-          <h2 className="text-xl font-bold text-gray-200 mb-2">여행 정보를 찾을 수 없습니다</h2>
+        <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full border border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">여행 정보를 찾을 수 없습니다</h2>
           <p className="text-gray-500">삭제되었거나 접근 권한이 없습니다.</p>
         </div>
       </div>
@@ -107,14 +107,14 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
       {/* 1. 여행 개요 영역 */}
-      <section className="bg-[#18181b] rounded-3xl p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+      <section className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm relative overflow-hidden">
         {/* Background glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-[80px]" />
         
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">{trip.title}</h1>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">{trip.title}</h1>
               {trip.concept && (
                 <p className="text-emerald-400 font-medium text-lg flex items-center mb-6">
                   <span className="w-8 h-[1px] bg-emerald-400 mr-3"></span>
@@ -124,14 +124,14 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
             </div>
             
             {/* Avatars */}
-            <div className="flex items-center gap-3 bg-black/30 p-2.5 rounded-2xl border border-white/5 backdrop-blur-md">
-              <span className="text-sm font-medium text-gray-400 pl-2">멤버 ({uniqueParticipants.length}명)</span>
+            <div className="flex items-center gap-3 bg-gray-50 p-2.5 rounded-2xl border border-gray-100">
+              <span className="text-sm font-medium text-gray-600 pl-2">멤버 ({uniqueParticipants.length}명)</span>
               <div className="flex -space-x-3 pr-2">
                 {displayUsers.map((uid, i) => {
                   const profile = userProfiles[uid];
                   const initial = profile?.displayName?.charAt(0) || profile?.email?.charAt(0) || '?';
                   return (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#18181b] bg-emerald-900/50 flex items-center justify-center text-sm font-bold text-emerald-400 z-10 relative overflow-hidden shadow-sm">
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-600 z-10 relative overflow-hidden shadow-sm">
                       {profile?.photoURL ? (
                         <Image src={profile.photoURL} alt="Profile" fill className="object-cover" sizes="40px" />
                       ) : (
@@ -141,7 +141,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
                   );
                 })}
                 {extraCount > 0 && (
-                  <div className="w-10 h-10 rounded-full border-2 border-[#18181b] bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-400 z-10 shadow-sm">
+                  <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500 z-10 shadow-sm">
                     +{extraCount}
                   </div>
                 )}
@@ -150,13 +150,13 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <div className="flex items-center bg-black/40 px-4 py-2.5 rounded-xl border border-white/5">
-              <Calendar className="w-5 h-5 mr-3 text-emerald-500" />
-              <span className="text-gray-200 font-medium">{sStr} ~ {eStr}</span>
+            <div className="flex items-center bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+              <Calendar className="w-5 h-5 mr-3 text-emerald-600" />
+              <span className="text-gray-700 font-medium">{sStr} ~ {eStr}</span>
             </div>
-            <div className="flex items-center bg-black/40 px-4 py-2.5 rounded-xl border border-white/5">
-              <MapPin className="w-5 h-5 mr-3 text-emerald-500" />
-              <span className="text-gray-200 font-medium">{trip.destination}</span>
+            <div className="flex items-center bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+              <MapPin className="w-5 h-5 mr-3 text-emerald-600" />
+              <span className="text-gray-700 font-medium">{trip.destination}</span>
             </div>
           </div>
         </div>
@@ -165,14 +165,14 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 2. 여행지 소개 영역 */}
         <section className="space-y-8">
-          <div className="bg-[#18181b] rounded-3xl p-8 border border-white/5 shadow-2xl">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <Navigation className="w-6 h-6 mr-3 text-emerald-400" />
+          <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+              <Navigation className="w-6 h-6 mr-3 text-emerald-600" />
               여행지 정보
             </h2>
             
             {/* Map */}
-            <div className="w-full h-64 rounded-2xl overflow-hidden mb-6 border border-white/10 relative">
+            <div className="w-full h-64 rounded-2xl overflow-hidden mb-6 border border-gray-200 relative">
               <iframe 
                 src={mapUrl}
                 width="100%" 
@@ -180,33 +180,33 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
                 style={{ border: 0 }} 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                className="absolute inset-0 grayscale contrast-125 opacity-80 mix-blend-screen"
+                className="absolute inset-0"
               />
-              <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-2xl"></div>
+              <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-gray-900/5 rounded-2xl"></div>
             </div>
 
             {/* Description */}
-            <p className="text-gray-300 leading-relaxed mb-8">
+            <p className="text-gray-700 leading-relaxed mb-8">
               {trip.destinationDesc || `${trip.destination}에 대한 멋진 설명을 기대해 주세요!`}
             </p>
 
             {/* Weather & Clothing */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-black/30 p-5 rounded-2xl border border-white/5">
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                 <div className="flex items-center mb-3">
-                  <CloudSun className="w-5 h-5 text-amber-400 mr-2" />
-                  <h3 className="font-semibold text-gray-200">예상 날씨</h3>
+                  <CloudSun className="w-5 h-5 text-amber-500 mr-2" />
+                  <h3 className="font-semibold text-gray-900">예상 날씨</h3>
                 </div>
-                <p className="text-sm text-gray-400 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {trip.weatherDesc || '날씨 정보가 준비되지 않았습니다.'}
                 </p>
               </div>
-              <div className="bg-black/30 p-5 rounded-2xl border border-white/5">
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                 <div className="flex items-center mb-3">
-                  <Shirt className="w-5 h-5 text-indigo-400 mr-2" />
-                  <h3 className="font-semibold text-gray-200">추천 복장</h3>
+                  <Shirt className="w-5 h-5 text-indigo-500 mr-2" />
+                  <h3 className="font-semibold text-gray-900">추천 복장</h3>
                 </div>
-                <p className="text-sm text-gray-400 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {trip.clothingDesc || '복장 가이드가 준비되지 않았습니다.'}
                 </p>
               </div>
@@ -215,10 +215,10 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
 
           {/* Gallery Carousel */}
           {trip.gallery && trip.gallery.length > 0 && (
-            <div className="bg-[#18181b] rounded-3xl p-6 border border-white/5 shadow-2xl">
+            <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-4 px-2">
-                <h2 className="text-lg font-bold text-white flex items-center">
-                  <ImageIcon className="w-5 h-5 mr-2 text-emerald-400" />
+                <h2 className="text-lg font-bold text-gray-900 flex items-center">
+                  <ImageIcon className="w-5 h-5 mr-2 text-emerald-600" />
                   주요 명소
                 </h2>
               </div>
