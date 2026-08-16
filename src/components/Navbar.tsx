@@ -1,14 +1,33 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
   
   const navLinks = [
-    { name: 'My Trips', href: '/trips' },
-    { name: 'Shared Memories', href: '/memories' },
+    { name: '내 여행', href: '/trips' },
+    { name: '공유된 추억', href: '/memories' },
   ];
 
   return (
@@ -49,12 +68,30 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="hidden sm:block text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
-              Log in
-            </button>
-            <button className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-              Sign Up
-            </button>
+            {!loading && (
+              user ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                      {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <span className="hidden text-sm font-medium text-gray-700 dark:text-gray-300 sm:block">
+                      {user.displayName || user.email?.split('@')[0]}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <Link href="/login" className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                  로그인
+                </Link>
+              )
+            )}
           </div>
         </div>
       </div>

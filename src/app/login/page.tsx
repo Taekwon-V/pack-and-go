@@ -66,12 +66,12 @@ export default function LoginPage() {
   return (
     <div className="flex h-screen items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold mb-6">Welcome to Tour App</h1>
+        <h1 className="text-2xl font-bold mb-6">투어 앱에 오신 것을 환영합니다</h1>
         <button
           onClick={handleGoogleLogin}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
         >
-          Sign in with Google
+          Google 계정으로 로그인
         </button>
       </div>
     </div>
