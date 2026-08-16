@@ -110,9 +110,9 @@ export default function TripsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f9] p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center justify-center py-8 mb-8">
-          <Image src="/banner.jpg" alt="Pack to GO" width={800} height={450} className="w-full max-w-4xl object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
+          <Image src="/banner.jpg" alt="Pack to GO" width={800} height={450} className="w-full object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
         </div>
 
         <div className="flex justify-between items-center mb-8">
@@ -126,7 +126,7 @@ export default function TripsPage() {
             <p className="text-slate-500 mt-2">새로운 여행이 게시되기를 기다려주세요!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {trips.map(trip => (
               <Link href={`/trips/${trip.id}`} key={trip.id}>
                 <div className="group relative bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer">
