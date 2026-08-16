@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       messages,
     });
 
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     return new Response(error.message || 'Server Error', { status: 500 });
