@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, or, where, getDocs } from 'firebase/firestore';
+import { collection, query, or, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
@@ -32,14 +32,27 @@ export default function TripsPage() {
       setUser(currentUser);
 
       try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.data();
+        const isAdmin = userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
+
         const tripsRef = collection(db, 'trips');
-        const q = query(
-          tripsRef,
-          or(
-            where('ownerId', '==', currentUser.uid),
-            where('collaboratorIds', 'array-contains', currentUser.uid)
-          )
-        );
+        let q;
+        
+        if (isAdmin) {
+          // 관리자는 모든 여행을 조회할 수 있음
+          q = query(tripsRef);
+        } else {
+          // 일반 사용자는 자신이 소유자이거나 참여자인 여행만 조회
+          q = query(
+            tripsRef,
+            or(
+              where('ownerId', '==', currentUser.uid),
+              where('collaboratorIds', 'array-contains', currentUser.uid)
+            )
+          );
+        }
 
         const snapshot = await getDocs(q);
         const fetchedTrips = snapshot.docs.map(doc => ({

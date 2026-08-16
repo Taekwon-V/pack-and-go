@@ -66,3 +66,22 @@ Stores trip invitations.
   - `tripId` (string)
   - `createdBy` (string) - Reference to `users.uid`
   - `createdAt` (timestamp)
+
+### 6. `photos` (Sub-collection under `trips`)
+Stores photos uploaded to a trip gallery.
+- **Path**: `trips/{tripId}/photos/{photoId}`
+- **Document ID**: Auto-generated
+- **Fields**:
+  - `url` (string) - URL to Firebase Storage
+  - `uploadedBy` (string) - Reference to `users.uid`
+  - `createdAt` (timestamp)
+
+### 7. `comments` (Sub-collection under `photos`)
+Stores comments for a specific photo.
+- **Path**: `trips/{tripId}/photos/{photoId}/comments/{commentId}`
+- **Document ID**: Auto-generated
+- **Fields**:
+  - `text` (string)
+  - `authorId` (string) - Reference to `users.uid`
+  - `authorName` (string)
+  - `createdAt` (timestamp)

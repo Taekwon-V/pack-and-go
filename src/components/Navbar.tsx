@@ -27,7 +27,6 @@ export default function Navbar() {
   
   const navLinks = [
     { name: '내 여행', href: '/trips' },
-    { name: '공유된 추억', href: '/memories' },
   ];
 
   return (

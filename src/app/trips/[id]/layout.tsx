@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, CalendarDays, Wallet, Users, ChevronLeft } from 'lucide-react';
+import { Home, CalendarDays, Wallet, Users, ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { use } from 'react';
 
 export default function TripLayout({
@@ -20,6 +20,7 @@ export default function TripLayout({
     { name: '일정표', href: `/trips/${id}/itinerary`, icon: CalendarDays },
     { name: '예산', href: `/trips/${id}/budget`, icon: Wallet },
     { name: '멤버 관리', href: `/trips/${id}/members`, icon: Users },
+    { name: '갤러리', href: `/trips/${id}/gallery`, icon: ImageIcon },
   ];
 
   return (
