@@ -67,10 +67,10 @@ export default function GeminiChatWidget({ destination }: { destination: string 
                   : 'bg-slate-50 text-slate-800 border-slate-200 rounded-tl-sm'
               }`}>
                 {/* Render text with basic formatting support (newlines to br) */}
-                {m.content.split('\n').map((line, i) => (
+                {(m.content || '').split('\n').map((line, i) => (
                   <span key={i}>
                     {line}
-                    {i !== m.content.split('\n').length - 1 && <br />}
+                    {i !== (m.content || '').split('\n').length - 1 && <br />}
                   </span>
                 ))}
               </div>
