@@ -58,3 +58,11 @@ Stores expense tracking for a trip.
     - `paidBy` (string) - Reference to `users.uid`
   - `createdAt` (timestamp)
   - `updatedAt` (timestamp)
+
+### 5. `invites`
+Stores trip invitations.
+- **Document ID**: `inviteCode` (Short random code)
+- **Fields**:
+  - `tripId` (string)
+  - `createdBy` (string) - Reference to `users.uid`
+  - `createdAt` (timestamp)

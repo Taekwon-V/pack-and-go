@@ -3,10 +3,13 @@
 import { auth, db } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get('invite');
 
   const handleGoogleLogin = async () => {
     try {
@@ -17,8 +20,11 @@ export default function LoginPage() {
       // Check if user exists in Firestore
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
+      
+      let isNewUser = false;
 
       if (!userSnap.exists()) {
+        isNewUser = true;
         // Automatically approve admin
         const isAdmin = user.email === 'inchul17.kim@gmail.com';
         const initialStatus = isAdmin ? 'approved' : 'pending';
@@ -32,8 +38,8 @@ export default function LoginPage() {
           createdAt: new Date(),
         });
 
-        if (!isAdmin) {
-          // Request approval
+        if (!isAdmin && !inviteCode) {
+          // Request approval if no invite
           await fetch('/api/request-approval', {
             method: 'POST',
             headers: {
@@ -51,9 +57,31 @@ export default function LoginPage() {
       const updatedSnap = await getDoc(userRef);
       if (updatedSnap.exists()) {
         const userData = updatedSnap.data();
-        if (userData.status === 'pending') {
+        
+        if (inviteCode && (isNewUser || userData.status === 'pending')) {
+          const res = await fetch('/api/invites/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              inviteCode,
+              uid: user.uid,
+              email: user.email,
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            router.push(`/trips/${data.tripId}`);
+            return;
+          }
+        }
+
+        // Wait to fetch updated user snap if they were just approved via invite?
+        // Wait, the above branch already navigates to trips if it succeeds.
+        if (userData.status === 'pending' && !inviteCode) {
           router.push('/pending');
-        } else if (userData.status === 'approved') {
+        } else if (userData.status === 'approved' || inviteCode) {
+          // If we had an inviteCode, they are now approved (handled above or previously approved).
+          // If it was already approved, it skips the first block and comes here.
           router.push('/');
         }
       }
@@ -75,5 +103,13 @@ export default function LoginPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-100">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
