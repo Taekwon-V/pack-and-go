@@ -102,7 +102,11 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
   const displayUsers = uniqueParticipants.slice(0, 6);
   const extraCount = uniqueParticipants.length - 6;
 
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trip.mapQuery || trip.destination)}&z=9&output=embed`;
+  let mapQueryStr = trip.mapQuery || trip.destination;
+  if (mapQueryStr.includes('오키나와')) {
+    mapQueryStr = 'Okinawa Island, Japan';
+  }
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQueryStr)}&z=9&output=embed`;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
