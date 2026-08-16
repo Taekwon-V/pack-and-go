@@ -44,9 +44,17 @@ export default function Navbar() {
           <div className="flex items-center gap-8">
             <Link 
               href="/" 
-              className="flex items-center gap-3 text-xl font-bold tracking-tighter text-slate-900 transition-colors hover:text-slate-600"
+              className="flex items-center gap-3 transition-opacity hover:opacity-80"
             >
-              Pack to GO
+              <style dangerouslySetInnerHTML={{__html: "@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');"}} />
+              <div className="flex flex-col justify-center">
+                <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-500" style={{ fontFamily: "'Dancing Script', cursive", lineHeight: '1.1' }}>
+                  Pack to Go
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium tracking-wide">
+                  세상을 탐험하고, 여정을 공유하세요
+                </span>
+              </div>
             </Link>
           </div>
           

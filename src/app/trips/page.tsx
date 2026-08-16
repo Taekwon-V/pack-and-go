@@ -112,9 +112,7 @@ export default function TripsPage() {
     <div className="min-h-screen bg-[#f5f5f9] p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col items-center justify-center py-8 mb-8">
-          <Image src="/banner.jpg" alt="Pack to GO" width={800} height={450} className="w-full max-w-4xl object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 mb-8 border border-white/5" priority />
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Pack to GO</h2>
-          <p className="text-slate-600 mt-3 font-medium">세상을 탐험하고, 여정을 공유하세요.</p>
+          <Image src="/banner.jpg" alt="Pack to GO" width={800} height={450} className="w-full max-w-4xl object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
         </div>
 
         <div className="flex justify-between items-center mb-8">
