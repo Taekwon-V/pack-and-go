@@ -6,9 +6,7 @@ import { Bot, Send, User, Sparkles, AlertCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export default function GeminiChatWidget({ destination }: { destination: string }) {
-  const [input, setInput] = useState('');
-  
-  const { messages, append, status, error } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, status, error } = useChat({
     api: '/api/chat',
     initialMessages: [
       {
@@ -97,21 +95,18 @@ export default function GeminiChatWidget({ destination }: { destination: string 
 
       {/* Input Form */}
       <form onSubmit={(e) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-        append({ role: 'user', content: input }, { data: { destination } });
-        setInput('');
+        handleSubmit(e, { data: { destination } });
       }} className="p-4 bg-white border-t border-slate-200">
         <div className="relative flex items-center">
           <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            value={input || ''}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (!input.trim() || status === 'submitted' || status === 'streaming' || error != null) return;
-                append({ role: 'user', content: input }, { data: { destination } });
-                setInput('');
+                if (!(input || '').trim() || status === 'submitted' || status === 'streaming' || error != null) return;
+                // Trigger form submission
+                e.currentTarget.form?.requestSubmit();
               }
             }}
             placeholder={`${destination}에 대해 질문해보세요...`}
@@ -120,7 +115,7 @@ export default function GeminiChatWidget({ destination }: { destination: string 
           />
           <button
             type="submit"
-            disabled={status === 'submitted' || status === 'streaming' || !input.trim() || error != null}
+            disabled={status === 'submitted' || status === 'streaming' || !(input || '').trim() || error != null}
             className="absolute right-2 p-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-400 disabled:opacity-50 disabled:hover:bg-indigo-500 transition-colors"
           >
             <Send className="w-4 h-4" />
