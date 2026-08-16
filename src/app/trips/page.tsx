@@ -16,12 +16,15 @@ interface Trip {
   startDate: string;
   endDate: string;
   coverImage?: string;
+  ownerId?: string;
+  collaboratorIds?: string[];
 }
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -62,6 +65,27 @@ export default function TripsPage() {
         })) as Trip[];
         
         setTrips(fetchedTrips);
+
+        // Fetch participant profiles
+        const uids = new Set<string>();
+        fetchedTrips.forEach(t => {
+          if (t.ownerId) uids.add(t.ownerId);
+          if (t.collaboratorIds) t.collaboratorIds.forEach(id => uids.add(id));
+        });
+        
+        const profiles: Record<string, any> = {};
+        await Promise.all(Array.from(uids).map(async (uid) => {
+          try {
+            const uSnap = await getDoc(doc(db, 'users', uid));
+            if (uSnap.exists()) {
+              profiles[uid] = uSnap.data();
+            }
+          } catch(e) {
+            console.error("Failed to fetch user profile", uid);
+          }
+        }));
+        setUserProfiles(profiles);
+        
       } catch (error) {
         console.error("Error fetching trips:", error);
       } finally {
@@ -131,15 +155,49 @@ export default function TripsPage() {
                       {trip.destination}
                     </p>
                     
-                    <div className="flex items-center text-sm text-gray-400 bg-black/20 rounded-xl p-3 border border-white/5">
-                      <Calendar className="w-4 h-4 mr-2 text-emerald-500" />
-                      {(() => {
-                        const sd = trip.startDate as any;
-                        const ed = trip.endDate as any;
-                        const sStr = sd?.toDate ? sd.toDate().toLocaleDateString() : (sd || '');
-                        const eStr = ed?.toDate ? ed.toDate().toLocaleDateString() : (ed || '');
-                        return `${sStr} ~ ${eStr}`;
-                      })()}
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center text-sm text-gray-400 bg-black/20 rounded-xl p-3 border border-white/5">
+                        <Calendar className="w-4 h-4 mr-2 text-emerald-500" />
+                        {(() => {
+                          const sd = trip.startDate as any;
+                          const ed = trip.endDate as any;
+                          const sStr = sd?.toDate ? sd.toDate().toLocaleDateString() : (sd || '');
+                          const eStr = ed?.toDate ? ed.toDate().toLocaleDateString() : (ed || '');
+                          return `${sStr} ~ ${eStr}`;
+                        })()}
+                      </div>
+                      
+                      <div className="flex -space-x-2">
+                        {(() => {
+                          const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
+                          const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
+                          const displayUsers = uniqueParticipants.slice(0, 6);
+                          const extraCount = uniqueParticipants.length - 6;
+
+                          return (
+                            <>
+                              {displayUsers.map((uid, i) => {
+                                const profile = userProfiles[uid];
+                                const initial = profile?.displayName?.charAt(0) || profile?.email?.charAt(0) || '?';
+                                return (
+                                  <div key={i} className="w-8 h-8 rounded-full border-2 border-[#18181b] bg-emerald-900/50 flex items-center justify-center text-xs font-bold text-emerald-400 z-10 relative overflow-hidden shadow-sm" title={profile?.displayName || profile?.email || 'Unknown User'}>
+                                    {profile?.photoURL ? (
+                                      <Image src={profile.photoURL} alt="Profile" fill className="object-cover" sizes="32px" />
+                                    ) : (
+                                      initial.toUpperCase()
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {extraCount > 0 && (
+                                <div className="w-8 h-8 rounded-full border-2 border-[#18181b] bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-400 z-10 shadow-sm" title={`${extraCount} more participants`}>
+                                  +{extraCount}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>

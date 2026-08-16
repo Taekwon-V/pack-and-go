@@ -33,6 +33,7 @@ function LoginContent() {
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName,
+          photoURL: user.photoURL,
           status: initialStatus,
           role: role,
           createdAt: new Date(),
