@@ -236,12 +236,14 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
           })()}
         </section>
 
-        {/* 3. Gemini Q&A 영역 */}
+        {/* 3. Gemini Q&A 영역 (삭제됨) */}
+        {/*
         <section>
           <div className="sticky top-24">
             <GeminiChatWidget destination={trip.destination} />
           </div>
         </section>
+        */}
       </div>
     </div>
   );
