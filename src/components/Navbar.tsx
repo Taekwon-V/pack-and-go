@@ -14,8 +14,15 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    const isDev = process.env.NODE_ENV === 'development';
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+      } else if (isDev) {
+        setUser({ displayName: 'Dev User', email: 'dev@localhost' } as any);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();

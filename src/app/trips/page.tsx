@@ -28,32 +28,36 @@ export default function TripsPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const isDev = process.env.NODE_ENV === 'development';
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
+      if (!currentUser && !isDev) {
         router.push('/login');
         return;
       }
-      setUser(currentUser);
+      if (currentUser) setUser(currentUser);
 
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        const userData = userDocSnap.data();
-        const isAdmin = userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
+        let isAdmin = isDev;
+        if (currentUser) {
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          const userData = userDocSnap.data();
+          isAdmin = isAdmin || userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
+        }
 
         const tripsRef = collection(db, 'trips');
         let q;
         
         if (isAdmin) {
-          // 관리자는 모든 여행을 조회할 수 있음
+          // 관리자 및 로컬 개발자는 모든 여행을 조회할 수 있음
           q = query(tripsRef);
         } else {
           // 일반 사용자는 자신이 소유자이거나 참여자인 여행만 조회
           q = query(
             tripsRef,
             or(
-              where('ownerId', '==', currentUser.uid),
-              where('collaboratorIds', 'array-contains', currentUser.uid)
+              where('ownerId', '==', currentUser!.uid),
+              where('collaboratorIds', 'array-contains', currentUser!.uid)
             )
           );
         }

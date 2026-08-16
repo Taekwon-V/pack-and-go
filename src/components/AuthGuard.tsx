@@ -13,12 +13,22 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
+    const isDev = process.env.NODE_ENV === 'development';
+
+    if (isDev) {
+      setAuthorized(true);
+      setLoading(false);
+      // Optional: still listen to auth state in background, but immediately authorize
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        if (pathname !== '/login') {
-          router.push('/login');
-        } else {
-          setLoading(false);
+        if (!isDev) {
+          if (pathname !== '/login') {
+            router.push('/login');
+          } else {
+            setLoading(false);
+          }
         }
         return;
       }

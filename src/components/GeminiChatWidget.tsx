@@ -106,6 +106,14 @@ export default function GeminiChatWidget({ destination }: { destination: string 
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!input.trim() || status === 'submitted' || status === 'streaming' || error != null) return;
+                append({ role: 'user', content: input }, { data: { destination } });
+                setInput('');
+              }
+            }}
             placeholder={`${destination}에 대해 질문해보세요...`}
             className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-sm rounded-full pl-5 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 border border-slate-200 transition-all"
             disabled={status === 'submitted' || status === 'streaming' || error != null}

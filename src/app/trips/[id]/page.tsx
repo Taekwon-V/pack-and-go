@@ -102,7 +102,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
   const displayUsers = uniqueParticipants.slice(0, 6);
   const extraCount = uniqueParticipants.length - 6;
 
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trip.mapQuery || trip.destination)}&output=embed`;
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trip.mapQuery || trip.destination)}&z=11&output=embed`;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
@@ -162,7 +162,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* 2. 여행지 소개 영역 */}
         <section className="space-y-8">
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
@@ -172,7 +172,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
             </h2>
             
             {/* Map */}
-            <div className="w-full h-64 rounded-2xl overflow-hidden mb-6 border border-slate-200 relative">
+            <div className="w-full h-96 rounded-2xl overflow-hidden mb-6 border border-slate-200 relative">
               <iframe 
                 src={mapUrl}
                 width="100%" 
@@ -198,7 +198,7 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
                   <h3 className="font-semibold text-slate-900">예상 날씨</h3>
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  {trip.weatherDesc || '날씨 정보가 준비되지 않았습니다.'}
+                  {trip.weatherDesc || '평균 기온 20도, 맑고 화창한 봄 날씨 (가끔 흐림)'}
                 </p>
               </div>
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
@@ -207,24 +207,33 @@ export default function TripOverviewPage({ params }: { params: Promise<{ id: str
                   <h3 className="font-semibold text-slate-900">추천 복장</h3>
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  {trip.clothingDesc || '복장 가이드가 준비되지 않았습니다.'}
+                  {trip.clothingDesc || '따뜻한 봄 날씨에 맞는 가벼운 긴팔, 아침저녁을 대비한 얇은 외투'}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Gallery Carousel */}
-          {trip.gallery && trip.gallery.length > 0 && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4 px-2">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center">
-                  <ImageIcon className="w-5 h-5 mr-2 text-indigo-600" />
-                  주요 명소
-                </h2>
+          {(() => {
+            const gallery = trip.gallery && trip.gallery.length > 0 ? trip.gallery : [
+              'https://images.unsplash.com/photo-1598134493179-51332e56807f?q=80&w=800&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1510619888924-11e2f4a56a64?q=80&w=800&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1590219660855-6cb3ee33b2fc?q=80&w=800&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1616766432415-68ffbbff8cb7?q=80&w=800&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1629806443493-27eb6ba92bf1?q=80&w=800&auto=format&fit=crop'
+            ];
+            return (
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center">
+                    <ImageIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                    주요 명소
+                  </h2>
+                </div>
+                <ImageCarousel images={gallery} />
               </div>
-              <ImageCarousel images={trip.gallery} />
-            </div>
-          )}
+            );
+          })()}
         </section>
 
         {/* 3. Gemini Q&A 영역 */}
