@@ -9,6 +9,8 @@ Stores user profile information.
   - `displayName` (string)
   - `email` (string)
   - `photoURL` (string, optional)
+  - `status` (string) - 'approved' | 'pending'
+  - `role` (string) - 'admin' | 'user'
   - `createdAt` (timestamp)
   - `updatedAt` (timestamp)
 
