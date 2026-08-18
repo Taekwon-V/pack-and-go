@@ -11,8 +11,6 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useEffect, useState } from 'react';
 
-import TripHeader from '@/components/trip/TripHeader';
-
 function TripLayoutContent({ children, id }: { children: React.ReactNode; id: string }) {
   const pathname = usePathname();
   const { trip } = useTrip();
@@ -72,8 +70,7 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
       {/* Main Content */}
       <main className="flex-1 w-full min-w-0 overflow-y-auto">
         <div className="h-full bg-[#f5f5f9] p-4 md:p-8">
-          <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-            <TripHeader />
+          <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
         </div>

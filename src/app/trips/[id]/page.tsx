@@ -9,6 +9,7 @@ export default function TripOverviewPage() {
 
   return (
     <div className="space-y-8">
+      <TripHeader />
       <TripOverviewTab trip={trip} mapUrl={mapUrl} />
     </div>
   );
