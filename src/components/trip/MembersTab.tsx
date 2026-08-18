@@ -42,9 +42,7 @@ export default function MembersTab({
         createdBy: trip.ownerId,
         createdAt: new Date()
       });
-      
-      const inviteUrl = `${window.location.origin}/join/${inviteCode}`;
-      
+      const inviteUrl = `${window.location.origin}/invite/${inviteCode}`;
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(inviteUrl);

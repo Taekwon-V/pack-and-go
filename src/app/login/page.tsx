@@ -25,15 +25,15 @@ function LoginContent() {
 
       if (!userSnap.exists()) {
         isNewUser = true;
-        // Automatically approve everyone for this prototype
         const isAdmin = user.email === 'inchul17.kim@gmail.com';
+        const initialStatus = isAdmin ? 'approved' : 'pending';
         const role = isAdmin ? 'admin' : 'user';
 
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
-          status: 'approved',
+          status: initialStatus,
           role: role,
           createdAt: new Date(),
         });
@@ -54,17 +54,10 @@ function LoginContent() {
       }
 
       // Read user data to determine routing
-      let updatedSnap = await getDoc(userRef);
+      const updatedSnap = await getDoc(userRef);
       if (updatedSnap.exists()) {
         const userData = updatedSnap.data();
-        
-        // Auto-approve existing pending users for this prototype
-        if (userData.status === 'pending') {
-          await setDoc(userRef, { status: 'approved' }, { merge: true });
-          updatedSnap = await getDoc(userRef); // refetch
-        }
-        
-        const finalUserData = updatedSnap.data()!;
+        const finalUserData = userData;
         
         if (inviteCode && (isNewUser || userData.status === 'pending')) {
           try {
