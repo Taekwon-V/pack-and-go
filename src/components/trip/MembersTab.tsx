@@ -31,33 +31,35 @@ export default function MembersTab({
   const generateInviteLink = async () => {
     try {
       setInviteLoading(true);
-      const res = await fetch('/api/invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId: trip.id, createdBy: trip.ownerId })
-      });
-      const data = await res.json();
       
-      if (res.ok) {
-        const inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
-        try {
-          if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(inviteUrl);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 3000);
-          } else {
-            prompt('보안 정책(http)으로 인해 자동 복사가 차단되었습니다. 아래 링크를 수동으로 복사해주세요:', inviteUrl);
-          }
-        } catch (clipboardErr) {
-          console.warn('Clipboard write failed, falling back to prompt', clipboardErr);
-          prompt('아래 초대 링크를 복사해주세요:', inviteUrl);
+      // Generate a random 8-character invite code
+      const inviteCode = Math.random().toString(36).substring(2, 10);
+      
+      // Save invite to Firestore using Client SDK directly to avoid Vercel API/Admin SDK issues
+      const { setDoc, doc } = await import('firebase/firestore');
+      await setDoc(doc(db, 'invites', inviteCode), {
+        tripId: trip.id,
+        createdBy: trip.ownerId,
+        createdAt: new Date()
+      });
+      
+      const inviteUrl = `${window.location.origin}/join/${inviteCode}`;
+      
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(inviteUrl);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+        } else {
+          prompt('보안 정책(http)으로 인해 자동 복사가 차단되었습니다. 아래 링크를 수동으로 복사해주세요:', inviteUrl);
         }
-      } else {
-        alert(data.error || '초대 링크 생성 실패');
+      } catch (clipboardErr) {
+        console.warn('Clipboard write failed, falling back to prompt', clipboardErr);
+        prompt('아래 초대 링크를 복사해주세요:', inviteUrl);
       }
-    } catch (error) {
-      console.error(error);
-      alert('오류가 발생했습니다.');
+    } catch (error: any) {
+      console.error('Error generating invite:', error);
+      alert(`오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     } finally {
       setInviteLoading(false);
     }
