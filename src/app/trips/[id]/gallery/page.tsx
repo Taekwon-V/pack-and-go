@@ -150,7 +150,8 @@ export default function GalleryPage() {
       const fileName = `${Date.now()}_${file.name}`;
       const storageRef = ref(storage, `trips/${tripId}/photos/${fileName}`);
       
-      const uploadTask = uploadBytesResumable(storageRef, compressedBlob);
+      const metadata = { contentType: file.type || 'image/jpeg' };
+      const uploadTask = uploadBytesResumable(storageRef, compressedBlob, metadata);
 
       uploadTask.on('state_changed', 
         (snapshot) => {
@@ -160,7 +161,7 @@ export default function GalleryPage() {
         (error) => {
           console.error('Upload failed:', error);
           setIsUploading(false);
-          alert('이미지 업로드에 실패했습니다.');
+          alert(`이미지 업로드 실패: ${error.code} - ${error.message}`);
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);

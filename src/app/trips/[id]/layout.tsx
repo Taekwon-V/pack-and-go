@@ -6,21 +6,28 @@ import { Home, CalendarDays, Wallet, Users, ChevronLeft, Image as ImageIcon } fr
 import { use } from 'react';
 import { TripProvider } from '@/components/trip/TripContext';
 
-export default function TripLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ id: string }>;
-}) {
+import { useTrip } from '@/components/trip/TripContext';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useEffect, useState } from 'react';
+
+function TripLayoutContent({ children, id }: { children: React.ReactNode; id: string }) {
   const pathname = usePathname();
-  const { id } = use(params);
+  const { trip } = useTrip();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  const isOwner = trip?.ownerId === user?.uid;
 
   const navItems = [
     { name: '홈', href: `/trips/${id}`, icon: Home },
     { name: '일정표', href: `/trips/${id}/itinerary`, icon: CalendarDays },
     { name: '예산', href: `/trips/${id}/budget`, icon: Wallet },
-    { name: '멤버 관리', href: `/trips/${id}/members`, icon: Users },
+    ...(isOwner ? [{ name: '멤버 관리', href: `/trips/${id}/members`, icon: Users }] : []),
     { name: '갤러리', href: `/trips/${id}/gallery`, icon: ImageIcon },
   ];
 
@@ -63,11 +70,27 @@ export default function TripLayout({
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="h-full bg-[#f5f5f9]">
-          <TripProvider tripId={id}>
-            {children}
-          </TripProvider>
+          {children}
         </div>
       </main>
     </div>
+  );
+}
+
+export default function TripLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+
+  return (
+    <TripProvider tripId={id}>
+      <TripLayoutContent id={id}>
+        {children}
+      </TripLayoutContent>
+    </TripProvider>
   );
 }

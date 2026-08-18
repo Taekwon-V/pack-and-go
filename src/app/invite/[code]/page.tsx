@@ -30,30 +30,38 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ code: s
   const acceptInvite = async (user: User, inviteCode: string) => {
     setStatus('accepting');
     try {
-      const response = await fetch('/api/invites/accept', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inviteCode,
-          uid: user.uid,
-          email: user.email,
-        }),
+      const { doc, getDoc, setDoc, updateDoc, arrayUnion } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      // 1. Get invite doc
+      const inviteRef = doc(db, 'invites', inviteCode);
+      const inviteSnap = await getDoc(inviteRef);
+
+      if (!inviteSnap.exists()) {
+        setErrorMessage('유효하지 않은 초대 코드입니다.');
+        setStatus('error');
+        return;
+      }
+
+      const inviteData = inviteSnap.data();
+      const tripId = inviteData.tripId;
+
+      // 2. Set user as approved
+      await setDoc(doc(db, 'users', user.uid), {
+        status: 'approved',
+        email: user.email,
+      }, { merge: true });
+
+      // 3. Add user to trip collaborators
+      await updateDoc(doc(db, 'trips', tripId), {
+        collaboratorIds: arrayUnion(user.uid)
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setStatus('success');
-        // Redirect to trip page after a brief success message
-        setTimeout(() => {
-          router.push(`/trips/${data.tripId}`);
-        }, 2000);
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.error || '초대 수락에 실패했습니다.');
-        setStatus('error');
-      }
+      setStatus('success');
+      setTimeout(() => {
+        router.push(`/trips/${tripId}`);
+      }, 2000);
+
     } catch (error) {
       console.error("Error accepting invite:", error);
       setErrorMessage('네트워크 오류가 발생했습니다.');

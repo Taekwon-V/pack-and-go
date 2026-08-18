@@ -82,7 +82,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Allow rendering of public routes without full authorization check
-  if (pathname === '/login' || pathname === '/pending' || pathname.startsWith('/api/')) {
+  if (pathname === '/login' || pathname === '/pending' || pathname.startsWith('/api/') || pathname.startsWith('/invite/')) {
     return <>{children}</>;
   }
 
