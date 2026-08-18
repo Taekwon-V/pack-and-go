@@ -40,9 +40,18 @@ export default function MembersTab({
       
       if (res.ok) {
         const inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
-        await navigator.clipboard.writeText(inviteUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(inviteUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+          } else {
+            prompt('보안 정책(http)으로 인해 자동 복사가 차단되었습니다. 아래 링크를 수동으로 복사해주세요:', inviteUrl);
+          }
+        } catch (clipboardErr) {
+          console.warn('Clipboard write failed, falling back to prompt', clipboardErr);
+          prompt('아래 초대 링크를 복사해주세요:', inviteUrl);
+        }
       } else {
         alert(data.error || '초대 링크 생성 실패');
       }
