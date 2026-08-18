@@ -207,7 +207,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 p-6 md:p-12 font-sans relative">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">여행 갤러리</h1>

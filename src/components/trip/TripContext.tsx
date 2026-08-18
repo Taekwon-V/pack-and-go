@@ -93,9 +93,7 @@ export function TripProvider({ tripId, children }: { tripId: string, children: R
 
   return (
     <TripContext.Provider value={{ trip, userProfiles, loading, refetch: fetchTripData, mapUrl }}>
-      <div className="p-6 md:p-10 max-w-7xl mx-auto h-full">
-        {children}
-      </div>
+      {children}
     </TripContext.Provider>
   );
 }
