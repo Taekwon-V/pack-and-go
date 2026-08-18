@@ -25,16 +25,15 @@ function LoginContent() {
 
       if (!userSnap.exists()) {
         isNewUser = true;
-        // Automatically approve admin
+        // Automatically approve everyone for this prototype
         const isAdmin = user.email === 'inchul17.kim@gmail.com';
-        const initialStatus = isAdmin ? 'approved' : 'pending';
         const role = isAdmin ? 'admin' : 'user';
 
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
-          status: initialStatus,
+          status: 'approved',
           role: role,
           createdAt: new Date(),
         });
@@ -55,34 +54,56 @@ function LoginContent() {
       }
 
       // Read user data to determine routing
-      const updatedSnap = await getDoc(userRef);
+      let updatedSnap = await getDoc(userRef);
       if (updatedSnap.exists()) {
         const userData = updatedSnap.data();
         
+        // Auto-approve existing pending users for this prototype
+        if (userData.status === 'pending') {
+          await setDoc(userRef, { status: 'approved' }, { merge: true });
+          updatedSnap = await getDoc(userRef); // refetch
+        }
+        
+        const finalUserData = updatedSnap.data()!;
+        
         if (inviteCode && (isNewUser || userData.status === 'pending')) {
-          const res = await fetch('/api/invites/accept', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              inviteCode,
-              uid: user.uid,
-              email: user.email,
-            })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            router.push(`/trips/${data.tripId}`);
-            return;
+          try {
+            const { arrayUnion, updateDoc } = await import('firebase/firestore');
+            
+            // 1. Get invite doc
+            const inviteRef = doc(db, 'invites', inviteCode);
+            const inviteSnap = await getDoc(inviteRef);
+
+            if (inviteSnap.exists()) {
+              const inviteData = inviteSnap.data();
+              const tripId = inviteData.tripId;
+
+              // 2. Set user as approved
+              await setDoc(userRef, {
+                status: 'approved',
+                email: user.email,
+              }, { merge: true });
+
+              // 3. Add user to trip collaborators
+              await updateDoc(doc(db, 'trips', tripId), {
+                collaboratorIds: arrayUnion(user.uid)
+              });
+
+              router.push(`/trips/${tripId}`);
+              return;
+            }
+          } catch (err) {
+            console.error('Error accepting invite during login:', err);
           }
         }
 
-        // Wait to fetch updated user snap if they were just approved via invite?
-        // Wait, the above branch already navigates to trips if it succeeds.
-        if (userData.status === 'pending' && !inviteCode) {
+        // Fallback routing if invite processing fails or no invite
+        const finalSnap = await getDoc(userRef);
+        const finalStatus = finalSnap.exists() ? finalSnap.data().status : 'pending';
+        
+        if (finalStatus === 'pending') {
           router.push('/pending');
-        } else if (userData.status === 'approved' || inviteCode) {
-          // If we had an inviteCode, they are now approved (handled above or previously approved).
-          // If it was already approved, it skips the first block and comes here.
+        } else {
           router.push('/');
         }
       }
