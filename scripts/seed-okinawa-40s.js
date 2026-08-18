@@ -129,23 +129,23 @@ async function seedOkinawa40s() {
   existingBudgets.forEach(doc => batch2.delete(doc.ref));
   await batch2.commit();
 
-  const budgetItems = [
-    { category: 'flights', amount: 1500000, description: '4인 왕복 항공권 (대한항공)', date: new Date('2027-07-01T00:00:00Z'), paidBy: ownerId },
-    { category: 'accommodation', amount: 2000000, description: '하얏트 1박 + 힐튼 2박 (럭셔리 오션뷰 객실 2개)', date: new Date('2027-07-05T00:00:00Z'), paidBy: ownerId },
-    { category: 'transport', amount: 400000, description: '알파드 렌터카 4일 (중/남부만 이동, 유류비 절감)', date: new Date('2027-08-01T00:00:00Z'), paidBy: ownerId },
-    { category: 'food', amount: 1200000, description: '4일간의 최고급 미식 비용 (식비 전체 예상)', date: new Date('2027-09-20T00:00:00Z'), paidBy: ownerId },
-    { category: 'activities', amount: 300000, description: '차탄 프라이빗 요트 선셋 투어', date: new Date('2027-09-10T00:00:00Z'), paidBy: ownerId },
-    { category: 'shopping', amount: 300000, description: '공동 쇼핑 예산 (도자기 등 아기자기한 소품)', date: new Date('2027-09-17T00:00:00Z'), paidBy: ownerId }
-  ];
+  const budgetData = {
+    totalBudget: 6000000, // 6,000,000 KRW
+    currency: 'KRW',
+    expenses: [
+      { id: 'exp1', category: 'flight', amount: 1500000, description: '4인 왕복 항공권 (대한항공)', date: new Date('2027-07-01T00:00:00Z'), paidBy: ownerId },
+      { id: 'exp2', category: 'accommodation', amount: 2000000, description: '하얏트 1박 + 힐튼 2박 (럭셔리 오션뷰 객실 2개)', date: new Date('2027-07-05T00:00:00Z'), paidBy: ownerId },
+      { id: 'exp3', category: 'transport', amount: 400000, description: '알파드 렌터카 4일 (중/남부만 이동, 유류비 절감)', date: new Date('2027-08-01T00:00:00Z'), paidBy: ownerId },
+      { id: 'exp4', category: 'food', amount: 1200000, description: '4일간의 최고급 미식 비용 (식비 전체 예상)', date: new Date('2027-09-20T00:00:00Z'), paidBy: ownerId },
+      { id: 'exp5', category: 'activity', amount: 300000, description: '차탄 프라이빗 요트 선셋 투어', date: new Date('2027-09-10T00:00:00Z'), paidBy: ownerId },
+      { id: 'exp6', category: 'shopping', amount: 300000, description: '공동 쇼핑 예산 (도자기 등 아기자기한 소품)', date: new Date('2027-09-17T00:00:00Z'), paidBy: ownerId }
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-  for (const item of budgetItems) {
-    await budgets.add({
-      ...item,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-  }
-  console.log(`Seeded ${budgetItems.length} budget items.`);
+  await budgets.add(budgetData);
+  console.log(`Seeded budget document with ${budgetData.expenses.length} expenses.`);
 
   console.log('Successfully completed seeding REVISED 40s Okinawa Trip!');
 }
