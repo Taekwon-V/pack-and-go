@@ -2,20 +2,17 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { db, storage, auth } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
   query, 
   orderBy, 
   onSnapshot, 
   addDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  doc,
+  deleteDoc
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytesResumable, 
-  getDownloadURL 
-} from 'firebase/storage';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { Camera, X, Send, Image as ImageIcon, Loader2, Plus } from 'lucide-react';
 
@@ -34,7 +31,7 @@ interface Comment {
   createdAt: any;
 }
 
-const compressImage = (file: File): Promise<Blob> => {
+const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -43,8 +40,9 @@ const compressImage = (file: File): Promise<Blob> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
+        // Reduce to 800px max to ensure base64 string safely fits within 1MB Firestore limit
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -65,10 +63,9 @@ const compressImage = (file: File): Promise<Blob> => {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Blob conversion failed'));
-        }, 'image/jpeg', 0.8);
+        // Convert directly to base64 data URL with 0.7 quality
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(dataUrl);
       };
       img.onerror = (error) => reject(error);
     };
@@ -90,8 +87,6 @@ export default function GalleryPage() {
   
   const [user, setUser] = useState<User | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
@@ -169,41 +164,26 @@ export default function GalleryPage() {
 
     try {
       setIsUploading(true);
-      const compressedBlob = await compressImage(file);
+      // compressImage now returns a base64 string directly
+      const base64String = await compressImage(file);
       
-      const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `trips/${tripId}/photos/${fileName}`);
+      // Save directly to Firestore database instead of Storage to bypass Firebase billing limits
+      await addDoc(collection(db, 'trips', tripId, 'photos'), {
+        url: base64String,
+        uploadedBy: user.uid,
+        createdAt: serverTimestamp()
+      });
       
-      const metadata = { contentType: file.type || 'image/jpeg' };
-      const uploadTask = uploadBytesResumable(storageRef, compressedBlob, metadata);
-
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Upload failed:', error);
-          setIsUploading(false);
-          alert(`이미지 업로드 실패: Firebase Storage 권한 설정을 확인해주세요. (Firebase Console -> Storage -> Rules)`);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          
-          await addDoc(collection(db, 'trips', tripId, 'photos'), {
-            url: downloadURL,
-            uploadedBy: user.uid,
-            createdAt: serverTimestamp()
-          });
-          
-          setIsUploading(false);
-          setUploadProgress(0);
-        }
-      );
-    } catch (error) {
+      setIsUploading(false);
+    } catch (error: any) {
       console.error('Compression/Upload error:', error);
       setIsUploading(false);
-      alert('이미지 처리 중 오류가 발생했습니다.');
+      // Firebase document size limit is 1MB. If image is too big even after compression, it will throw an error here.
+      if (error.code === 'resource-exhausted') {
+        alert('이미지 용량이 너무 큽니다. 다른 사진을 선택해주세요.');
+      } else {
+        alert('이미지 저장 중 오류가 발생했습니다.');
+      }
     }
     
     if (fileInputRef.current) {
@@ -322,7 +302,7 @@ export default function GalleryPage() {
       {isUploading && (
         <div className="fixed bottom-24 right-8 bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-gray-100 text-sm font-medium text-gray-700 flex items-center gap-3 z-40">
           <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-          <span>업로드 중... {Math.round(uploadProgress)}%</span>
+          <span>이미지 처리 및 업로드 중...</span>
         </div>
       )}
 
