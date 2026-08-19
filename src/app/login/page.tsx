@@ -2,120 +2,63 @@
 
 import { auth, db } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
 function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const inviteCode = searchParams.get('invite');
 
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Check if user exists in Firestore
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      let isNewUser = false;
-
-      if (!userSnap.exists()) {
-        isNewUser = true;
-        const isAdmin = user.email === 'inchul17.kim@gmail.com';
-        const initialStatus = isAdmin ? 'approved' : 'pending';
-        const role = isAdmin ? 'admin' : 'user';
-
-        await setDoc(userRef, {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          status: initialStatus,
-          role: role,
-          createdAt: new Date(),
-        });
-
-        if (!isAdmin && !inviteCode) {
-          // Request approval if no invite
-          await fetch('/api/request-approval', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              uid: user.uid,
-              email: user.email,
-            }),
-          });
-        }
-      }
-
-      // Read user data to determine routing
-      const updatedSnap = await getDoc(userRef);
-      if (updatedSnap.exists()) {
-        const userData = updatedSnap.data();
-        const finalUserData = userData;
-        
-        if (inviteCode && (isNewUser || userData.status === 'pending')) {
-          try {
-            const { arrayUnion, updateDoc } = await import('firebase/firestore');
-            
-            // 1. Get invite doc
-            const inviteRef = doc(db, 'invites', inviteCode);
-            const inviteSnap = await getDoc(inviteRef);
-
-            if (inviteSnap.exists()) {
-              const inviteData = inviteSnap.data();
-              const tripId = inviteData.tripId;
-
-              // 2. Set user as approved
-              await setDoc(userRef, {
-                status: 'approved',
-                email: user.email,
-              }, { merge: true });
-
-              // 3. Add user to trip collaborators
-              await updateDoc(doc(db, 'trips', tripId), {
-                collaboratorIds: arrayUnion(user.uid)
-              });
-
-              router.push(`/trips/${tripId}`);
-              return;
-            }
-          } catch (err) {
-            console.error('Error accepting invite during login:', err);
-          }
-        }
-
-        // Fallback routing if invite processing fails or no invite
-        const finalSnap = await getDoc(userRef);
-        const finalStatus = finalSnap.exists() ? finalSnap.data().status : 'pending';
-        
-        if (finalStatus === 'pending') {
-          router.push('/pending');
-        } else {
-          router.push('/');
-        }
-      }
+      // signInWithPopup updates the auth state, which AuthGuard will detect and handle
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error('Login error:', error);
-      alert('Failed to login. Check console for details.');
+      alert('로그인 중 오류가 발생했습니다.');
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold mb-6">투어 앱에 오신 것을 환영합니다</h1>
-        <button
-          onClick={handleGoogleLogin}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Google 계정으로 로그인
-        </button>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
+          Pack to GO
+        </h2>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          세상을 탐험하고, 여정을 공유하세요
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-sm sm:rounded-2xl sm:px-10 border border-slate-200">
+          <div className="space-y-6">
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full flex justify-center py-3 px-4 border border-slate-300 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Google 계정으로 계속하기
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

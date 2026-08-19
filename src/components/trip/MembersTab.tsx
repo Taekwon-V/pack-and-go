@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { doc, updateDoc, arrayRemove, arrayUnion, getDocs, collection, query, where, addDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayRemove, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Users, Mail, Link as LinkIcon, UserX, Crown, ShieldCheck, CheckCircle2, Loader2, Plus } from 'lucide-react';
+import { Users, Mail, UserX, Crown, ShieldCheck, Loader2, Plus } from 'lucide-react';
 import Image from 'next/image';
 
 interface Trip {
   id: string;
   ownerId: string;
   collaboratorIds?: string[];
+  collaboratorEmails?: string[];
   [key: string]: any;
 }
 
@@ -20,50 +21,11 @@ export default function MembersTab({
   userProfiles: Record<string, any>,
   onUpdate: () => void 
 }) {
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  
   const [emailInput, setEmailInput] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. 링크로 초대하기 (API 호출)
-  const generateInviteLink = async () => {
-    try {
-      setInviteLoading(true);
-      
-      // Generate a random 8-character invite code
-      const inviteCode = Math.random().toString(36).substring(2, 10);
-      
-      // Save invite to Firestore using Client SDK directly to avoid Vercel API/Admin SDK issues
-      const { setDoc, doc } = await import('firebase/firestore');
-      await setDoc(doc(db, 'invites', inviteCode), {
-        tripId: trip.id,
-        createdBy: trip.ownerId,
-        createdAt: new Date()
-      });
-      const inviteUrl = `${window.location.origin}/invite/${inviteCode}`;
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(inviteUrl);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 3000);
-        } else {
-          prompt('보안 정책(http)으로 인해 자동 복사가 차단되었습니다. 아래 링크를 수동으로 복사해주세요:', inviteUrl);
-        }
-      } catch (clipboardErr) {
-        console.warn('Clipboard write failed, falling back to prompt', clipboardErr);
-        prompt('아래 초대 링크를 복사해주세요:', inviteUrl);
-      }
-    } catch (error: any) {
-      console.error('Error generating invite:', error);
-      alert(`오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
-    } finally {
-      setInviteLoading(false);
-    }
-  };
-
-  // 2. 이메일로 직접 추가하기 (이메일로 UID 찾아서 업데이트)
+  // 이메일로 직접 추가하기
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) return;
@@ -71,59 +33,67 @@ export default function MembersTab({
     setErrorMsg('');
     setAddLoading(true);
     try {
-      // Find user by email
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', emailInput.trim()));
-      const querySnapshot = await getDocs(q);
+      const email = emailInput.trim().toLowerCase();
 
-      if (querySnapshot.empty) {
-        setErrorMsg('가입되지 않은 이메일입니다. 먼저 서비스를 가입해야 합니다.');
+      if (trip.collaboratorEmails && trip.collaboratorEmails.includes(email)) {
+        setErrorMsg('이미 참여 중인 이메일입니다.');
         setAddLoading(false);
         return;
       }
 
-      const newMemberUid = querySnapshot.docs[0].id;
-
-      if (newMemberUid === trip.ownerId || (trip.collaboratorIds && trip.collaboratorIds.includes(newMemberUid))) {
-        setErrorMsg('이미 참여 중인 멤버입니다.');
-        setAddLoading(false);
-        return;
-      }
-
-      // Add to collaboratorIds
+      // Add to trip's collaboratorEmails
       const tripRef = doc(db, 'trips', trip.id);
       await updateDoc(tripRef, {
-        collaboratorIds: arrayUnion(newMemberUid)
+        collaboratorEmails: arrayUnion(email)
       });
+
+      // Also add to global allowed_emails so they can log in
+      const allowedRef = doc(db, 'allowed_emails', email);
+      await setDoc(allowedRef, { addedAt: new Date(), source: 'trip_invite' }, { merge: true });
 
       setEmailInput('');
       onUpdate(); // Trigger parent re-fetch
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('Error adding member:', error);
       setErrorMsg('멤버 추가 중 오류가 발생했습니다.');
     } finally {
       setAddLoading(false);
     }
   };
 
-  // 3. 멤버 내보내기
-  const handleRemoveMember = async (uidToRemove: string) => {
-    if (!confirm('정말 이 멤버를 여행에서 제외하시겠습니까?')) return;
+  const handleRemoveEmail = async (email: string) => {
+    if (!confirm(`${email} 님을 여행에서 제외하시겠습니까?`)) return;
     
     try {
       const tripRef = doc(db, 'trips', trip.id);
       await updateDoc(tripRef, {
-        collaboratorIds: arrayRemove(uidToRemove)
+        collaboratorEmails: arrayRemove(email)
       });
-      onUpdate(); // Trigger parent re-fetch
+      onUpdate();
     } catch (error) {
       console.error(error);
       alert('멤버 삭제 중 오류가 발생했습니다.');
     }
   };
 
-  const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
-  const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
+  const handleRemoveMember = async (uid: string) => {
+    if (!confirm('이 멤버를 여행에서 제외하시겠습니까?')) return;
+    
+    try {
+      const tripRef = doc(db, 'trips', trip.id);
+      await updateDoc(tripRef, {
+        collaboratorIds: arrayRemove(uid)
+      });
+      onUpdate();
+    } catch (error) {
+      console.error(error);
+      alert('멤버 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  const participantsUids = [trip.ownerId, ...(trip.collaboratorIds || [])];
+  const uniqueUids = Array.from(new Set(participantsUids)).filter(Boolean) as string[];
+  const collaboratorEmails = trip.collaboratorEmails || [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -136,12 +106,13 @@ export default function MembersTab({
                 <Users className="w-6 h-6 mr-3 text-indigo-600" />
                 참여 멤버
               </h2>
-              <p className="text-sm text-slate-500 mt-1">총 {uniqueParticipants.length}명이 이 여행을 함께하고 있습니다.</p>
+              <p className="text-sm text-slate-500 mt-1">이 여행을 함께할 멤버 목록입니다.</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            {uniqueParticipants.map((uid) => {
+            {/* 가입된 UID 멤버들 (기존 멤버) */}
+            {uniqueUids.map((uid) => {
               const profile = userProfiles[uid] || {};
               const isOwner = uid === trip.ownerId;
               const initial = profile.displayName?.charAt(0) || profile.email?.charAt(0) || '?';
@@ -190,6 +161,39 @@ export default function MembersTab({
                 </div>
               );
             })}
+
+            {/* 이메일로만 추가된 멤버들 (아직 로그인 전이거나 프로필 연결 안 됨) */}
+            {collaboratorEmails.map((email) => {
+              const alreadyRendered = uniqueUids.some(uid => userProfiles[uid]?.email === email);
+              if (alreadyRendered) return null;
+
+              return (
+                <div key={email} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-indigo-100 hover:shadow-sm transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-12 h-12 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-lg font-bold text-slate-500 shadow-sm overflow-hidden">
+                      {email.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-slate-700">초대된 멤버</h4>
+                        <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-md font-medium">
+                          가입 대기중
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500">{email}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleRemoveEmail(email)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                    title="초대 취소"
+                  >
+                    <UserX className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -197,40 +201,9 @@ export default function MembersTab({
       {/* 오른쪽: 초대하기 패널 */}
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-2">초대 링크 만들기</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">이메일로 멤버 추가</h3>
           <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-            여행을 함께할 친구에게 링크를 전달하세요. 링크를 통해 가입하면 자동으로 여행에 참여됩니다.
-          </p>
-          
-          <button 
-            onClick={generateInviteLink}
-            disabled={inviteLoading}
-            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-all ${
-              copied 
-                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg'
-            }`}
-          >
-            {inviteLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : copied ? (
-              <>
-                <CheckCircle2 className="w-5 h-5" />
-                링크가 복사되었습니다
-              </>
-            ) : (
-              <>
-                <LinkIcon className="w-5 h-5" />
-                초대 링크 복사하기
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-2">이메일로 직접 추가</h3>
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-            이미 가입된 회원의 구글 이메일을 입력하여 즉시 여행에 초대할 수 있습니다.
+            여행을 함께할 구글 이메일을 입력하세요. 추가된 이메일은 즉시 앱에 로그인하고 여행을 볼 수 있습니다.
           </p>
           
           <form onSubmit={handleAddMember} className="space-y-3">

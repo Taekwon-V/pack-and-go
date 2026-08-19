@@ -57,7 +57,8 @@ export default function TripsPage() {
             tripsRef,
             or(
               where('ownerId', '==', currentUser!.uid),
-              where('collaboratorIds', 'array-contains', currentUser!.uid)
+              where('collaboratorIds', 'array-contains', currentUser!.uid),
+              where('collaboratorEmails', 'array-contains', currentUser!.email)
             )
           );
         }

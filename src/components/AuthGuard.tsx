@@ -34,33 +34,74 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+        const email = user.email;
+        if (!email) {
+          await auth.signOut();
+          router.push('/login');
+          return;
+        }
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
+        let isApproved = false;
+        
+        // 1. Check if admin
+        if (email === 'inchul17.kim@gmail.com') {
+          isApproved = true;
+        } else {
+          // 2. Check if email is explicitly allowed globally
+          const { doc, getDoc, collection, query, where, getDocs, setDoc } = await import('firebase/firestore');
+          const allowedDoc = await getDoc(doc(db, 'allowed_emails', email));
           
-          if (userData.status === 'pending') {
-            if (pathname !== '/pending') {
-              router.push('/pending');
-            } else {
-              setAuthorized(true);
-            }
-          } else if (userData.status === 'approved') {
-            if (pathname === '/login' || pathname === '/pending') {
-              router.push('/');
-            } else {
-              setAuthorized(true);
-            }
+          if (allowedDoc.exists()) {
+            isApproved = true;
           } else {
-            // Unknown status
-            router.push('/login');
+            // 3. Check if they are a collaborator in ANY trip via collaboratorEmails
+            const tripsQuery = query(collection(db, 'trips'), where('collaboratorEmails', 'array-contains', email));
+            const tripsSnap = await getDocs(tripsQuery);
+            if (!tripsSnap.empty) {
+              isApproved = true;
+              // Auto-add to allowed_emails for performance
+              await setDoc(doc(db, 'allowed_emails', email), { addedAt: new Date(), source: 'trip_collaborator' });
+            } else {
+              // Backward compatibility: check if they are in collaboratorIds
+              const oldTripsQuery = query(collection(db, 'trips'), where('collaboratorIds', 'array-contains', user.uid));
+              const oldTripsSnap = await getDocs(oldTripsQuery);
+              if (!oldTripsSnap.empty) {
+                isApproved = true;
+                await setDoc(doc(db, 'allowed_emails', email), { addedAt: new Date(), source: 'legacy_collaboratorId' });
+              }
+            }
+          }
+        }
+
+        if (isApproved) {
+          // Ensure user document exists and is marked approved
+          const { doc, getDoc, setDoc } = await import('firebase/firestore');
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              status: 'approved',
+              role: email === 'inchul17.kim@gmail.com' ? 'admin' : 'user',
+              createdAt: new Date()
+            });
+          } else if (userSnap.data().status !== 'approved') {
+            await setDoc(userRef, { status: 'approved' }, { merge: true });
+          }
+
+          if (pathname === '/login') {
+            router.push('/');
+          } else {
+            setAuthorized(true);
           }
         } else {
-          // Document might not be written yet, or error occurred during login
-          if (pathname !== '/login') {
-            router.push('/login');
-          }
+          // Not approved
+          await auth.signOut();
+          alert("접근 권한이 없습니다. 관리자에게 이메일 등록을 요청하세요.");
+          if (pathname !== '/login') router.push('/login');
         }
       } catch (error) {
         console.error('Error fetching user status:', error);
@@ -82,7 +123,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Allow rendering of public routes without full authorization check
-  if (pathname === '/login' || pathname === '/pending' || pathname.startsWith('/api/') || pathname.startsWith('/invite/')) {
+  if (pathname === '/login' || pathname.startsWith('/api/')) {
     return <>{children}</>;
   }
 
