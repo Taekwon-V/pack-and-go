@@ -1,6 +1,5 @@
-import { CloudSun, Compass, MapPin, MessageCircle, Shirt, Users } from 'lucide-react';
+import { CloudSun, Compass, MapPin, Shirt, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import GeminiChatWidget from '@/components/GeminiChatWidget';
 import ImageCarousel from '@/components/ImageCarousel';
 import DestinationMap from '@/components/DestinationMap';
 import type { TripRecord } from './types';
@@ -72,7 +71,7 @@ export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOv
         <div className="editorial-overview-grid mt-0">
           <article className="editorial-article">
             <div className="mb-5 flex items-center justify-between gap-4">
-              <h2 id="destination-title" className="editorial-kicker">The destination / 01</h2>
+              <h2 id="destination-title" className="editorial-kicker">The destination</h2>
               <span className="editorial-display text-[1.2rem]">{trip.destination}</span>
             </div>
 
@@ -124,40 +123,10 @@ export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOv
 
       <section className="editorial-gallery-section" aria-labelledby="gallery-title">
         <div className="flex items-center justify-between gap-4">
-          <h2 id="gallery-title" className="editorial-kicker">Field images / 04 fragments</h2>
+          <h2 id="gallery-title" className="editorial-kicker">Field images</h2>
           <span className="hidden text-[0.62rem] font-bold tracking-[0.13em] text-[var(--muted)] sm:inline">A quiet sequence of place</span>
         </div>
         <ImageCarousel images={gallery} />
-      </section>
-
-      <section className="editorial-chat-section" aria-labelledby="travel-assistant-title">
-        <div className="editorial-section-heading">
-          <div>
-            <p className="editorial-kicker">07 / Travel assistant</p>
-            <h2 id="travel-assistant-title" className="editorial-display mt-4 text-[clamp(2rem,4vw,3.35rem)] leading-[1.03]">
-              여행을 물어보는 시간.
-            </h2>
-          </div>
-          <p className="hidden max-w-[18ch] text-right text-[0.62rem] font-bold uppercase leading-[1.7] tracking-[0.15em] text-[var(--muted)] sm:block">
-            Gemini travel guide<br />Ask the next question
-          </p>
-        </div>
-
-        <div className="editorial-chat-layout">
-          <div className="editorial-chat-intro">
-            <p className="editorial-chat-intro-copy">
-              함께 만든 일정의 빈칸을 채우거나, 지금 눈앞에 있는 장소의 다음 장면을 물어보세요. Gemini가 {trip.destination}에 맞춰 짧고 실용적인 답을 정리해드립니다.
-            </p>
-            <div className="editorial-chat-prompts" aria-label="질문 예시">
-              <p className="editorial-chat-prompt"><MessageCircle className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />현지에서 꼭 먹어봐야 할 메뉴는?</p>
-              <p className="editorial-chat-prompt"><MessageCircle className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />비 오는 날 바꿀 수 있는 일정은?</p>
-              <p className="editorial-chat-prompt"><MessageCircle className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />공항에서 숙소까지 가장 편한 방법은?</p>
-            </div>
-            <p className="editorial-chat-note">PRIVATE FIELD NOTE / GOOGLE AI</p>
-          </div>
-
-          <GeminiChatWidget destination={trip.destination} />
-        </div>
       </section>
     </div>
   );

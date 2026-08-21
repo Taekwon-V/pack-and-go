@@ -102,13 +102,13 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
     <section className="editorial-section !pt-0" aria-labelledby="itinerary-title">
       <div className="editorial-section-heading">
         <div>
-          <p className="editorial-kicker">03 / Itinerary</p>
+          <p className="editorial-kicker">Itinerary</p>
           <h2 id="itinerary-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">
             하루의 결을 따라.
           </h2>
         </div>
         <span className="hidden text-right text-[0.62rem] font-bold uppercase tracking-[0.15em] text-[var(--muted)] sm:block">
-          {currentDayData ? `${currentDayData.activities.length} stops` : 'No stops'}<br />Okinawa / field route
+          {currentDayData ? `${currentDayData.activities.length} stops` : 'No stops'}<br />Field route
         </span>
       </div>
 
@@ -145,49 +145,63 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
             return (
               <article key={`${currentDayData.id}-${index}`} className="editorial-timeline-entry">
                 <span className="editorial-timeline-node" aria-hidden="true" />
-                <button
-                  type="button"
-                  className="editorial-timeline-header editorial-focus"
-                  onClick={() => toggleItem(index)}
-                  aria-expanded={isExpanded}
-                  aria-controls={detailsId}
-                >
-                  <span className="editorial-timeline-time">
-                    <Clock3 className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-                    {activity.time}
-                  </span>
-                  <span>
-                    <span className="editorial-timeline-title block">{activity.title}</span>
-                    <span className="editorial-timeline-location">
-                      <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
-                      {activity.location}
+                <div className="editorial-timeline-header">
+                  <button
+                    type="button"
+                    className="editorial-timeline-header-main editorial-focus"
+                    onClick={() => toggleItem(index)}
+                    aria-expanded={isExpanded}
+                    aria-controls={detailsId}
+                  >
+                    <span className="editorial-timeline-time">
+                      <Clock3 className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                      {activity.time}
                     </span>
-                  </span>
-                  <span className="editorial-timeline-toggle" aria-hidden="true">
-                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </span>
-                </button>
+                    <span>
+                      <span className="editorial-timeline-title block">{activity.title}</span>
+                      <span className="editorial-timeline-location">
+                        <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
+                        {activity.location}
+                      </span>
+                    </span>
+                  </button>
+
+                  <div className="editorial-timeline-actions">
+                    <button
+                      type="button"
+                      onClick={() => openGoogleMaps(activity.mapQuery || activity.location)}
+                      className="editorial-timeline-map-btn editorial-focus"
+                      title={`${activity.location} Google 지도에서 보기`}
+                      aria-label={`${activity.location} Google 지도에서 보기`}
+                    >
+                      <Map className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleItem(index)}
+                      className="editorial-timeline-toggle editorial-focus"
+                      aria-expanded={isExpanded}
+                      aria-controls={detailsId}
+                      title={isExpanded ? '상세 접기' : '상세 펼치기'}
+                      aria-label={isExpanded ? '상세 접기' : '상세 펼치기'}
+                    >
+                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
 
                 {isExpanded && (
                   <div id={detailsId} className="editorial-timeline-detail">
-                    <span className="text-[0.58rem] font-extrabold uppercase tracking-[0.14em] text-[var(--muted)]">Field note</span>
-                    <div>
-                      <p className="editorial-timeline-detail-copy">{activity.description || '이 일정에 대한 세부 기록을 준비하고 있습니다.'}</p>
-                      <div className="editorial-timeline-detail-actions">
-                        <span className="editorial-timeline-cost">
-                          {activity.costEstimate && activity.costEstimate > 0
-                            ? `예상 비용 ${activity.costEstimate.toLocaleString()}원`
-                            : '예상 비용 없음'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => openGoogleMaps(activity.mapQuery || activity.location)}
-                          className="editorial-link-button editorial-focus inline-flex items-center gap-1.5"
-                        >
-                          <Map className="h-3.5 w-3.5" aria-hidden="true" />
-                          지도에서 보기
-                        </button>
-                      </div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="editorial-kicker text-[0.58rem] !tracking-[0.14em]">Field note</span>
+                    </div>
+                    <p className="editorial-timeline-detail-copy">{activity.description || '이 일정에 대한 세부 기록을 준비하고 있습니다.'}</p>
+                    <div className="editorial-timeline-detail-actions">
+                      <span className="editorial-timeline-cost">
+                        {activity.costEstimate && activity.costEstimate > 0
+                          ? `예상 비용 ${activity.costEstimate.toLocaleString()}원`
+                          : '예상 비용 없음'}
+                      </span>
                     </div>
                   </div>
                 )}

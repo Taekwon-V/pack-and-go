@@ -1010,11 +1010,20 @@
   }
 
   .editorial-timeline-header {
-    display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr) 1.5rem;
-    align-items: start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 1rem;
     width: 100%;
+  }
+
+  .editorial-timeline-header-main {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
     border: 0;
     background: transparent;
     color: inherit;
@@ -1049,23 +1058,58 @@
     line-height: 1.5;
   }
 
+  .editorial-timeline-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  .editorial-timeline-map-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 9999px;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--olive);
+    cursor: pointer;
+    transition: all 180ms ease;
+  }
+
+  .editorial-timeline-map-btn:hover {
+    color: var(--terra);
+    border-color: var(--terra);
+    background: var(--soft-terra);
+    transform: translateY(-1px);
+  }
+
   .editorial-timeline-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    background: transparent;
     color: var(--muted);
+    cursor: pointer;
     transition: color 180ms ease, transform 180ms ease;
   }
 
-  .editorial-timeline-header:hover .editorial-timeline-toggle {
+  .editorial-timeline-toggle:hover {
     color: var(--terra);
     transform: translateY(-1px);
   }
 
   .editorial-timeline-detail {
-    display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr);
-    gap: 1rem;
-    border-top: 1px solid var(--rule);
-    margin-top: 1.2rem;
-    padding-top: 1rem;
+    margin-top: 1rem;
+    margin-left: 8.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--rule);
   }
 
   .editorial-timeline-detail-copy {
@@ -2324,8 +2368,8 @@
     grid-column: 3;
   }
 
-  .editorial-timeline-header {
-    grid-template-columns: minmax(0, 1fr) 1.5rem;
+  .editorial-timeline-header-main {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .editorial-timeline-time {
@@ -2333,7 +2377,10 @@
   }
 
   .editorial-timeline-detail {
-    grid-template-columns: minmax(0, 1fr);
+    margin-left: 0;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--soft-terra);
+    border-top: 0;
   }
 
   .editorial-ledger-table,

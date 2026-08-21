@@ -13,15 +13,8 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const isDev = process.env.NODE_ENV === 'development';
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else if (isDev) {
-        setUser({ displayName: 'Dev User', email: 'dev@localhost' } as User);
-      } else {
-        setUser(null);
-      }
+      setUser(currentUser);
       setLoading(false);
     });
 
@@ -46,32 +39,18 @@ export default function Navbar() {
         </Link>
 
         <div className="editorial-nav-links">
-          {!isLoginPage && (
-            <>
-              <Link
-                href="/trips"
-                className="editorial-nav-link editorial-focus"
-                data-active={pathname === '/trips' || pathname.startsWith('/trips/')}
-              >
-                Travel Journal
-              </Link>
-              <Link
-                href="/trips"
-                className="editorial-nav-link editorial-focus"
-                data-active={pathname === '/trips'}
-              >
-                My Trips
-              </Link>
-            </>
-          )}
-
           {!loading && user && !isLoginPage && (
             <div className="editorial-nav-user">
               <span className="editorial-avatar" aria-hidden="true">
                 {profileInitial}
               </span>
-              <span>{profileLabel}</span>
-              <button type="button" onClick={handleLogout} className="editorial-nav-action editorial-focus">
+              <span className="text-[var(--ink)]">{profileLabel}</span>
+              <span className="mx-1.5 h-3.5 w-px bg-[var(--rule)]" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="editorial-nav-action editorial-focus transition-colors hover:text-[var(--terra)]"
+              >
                 Log Out
               </button>
             </div>

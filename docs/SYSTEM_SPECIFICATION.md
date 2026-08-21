@@ -418,16 +418,14 @@ RootLayout (src/app/layout.tsx)
         │
         └── TripLayout (/trips/[id]/layout.tsx)
             └── TripProvider (TripContext)
-                ├── Aside (Sidebar Navigation - 홈, 일정표, 예산, 멤버, 갤러리)
+                ├── Aside (Sidebar Navigation - 홈, 일정표, 예산, 갤러리, 멤버)
                 ├── TripContextHeader (상단 현재 섹션 표시기)
                 └── Main Content
                     ├── TripOverviewPage (/trips/[id])
                     │   ├── TripHeader (상세 헤더)
                     │   └── TripOverviewTab
                     │       ├── DestinationMap (지도 & Fallback)
-                    │       ├── Weather & Clothing Info
-                    │       ├── ImageCarousel (명소 슬라이더)
-                    │       └── GeminiChatWidget (AI 챗봇)
+                    │       └── ImageCarousel (명소 슬라이더)
                     ├── ItineraryTab (/trips/[id]/itinerary)
                     │   ├── DaySelector (Day 수평 탭)
                     │   └── Timeline (활동 아코디언 & 구글맵 바로가기)

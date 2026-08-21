@@ -19,17 +19,19 @@ export default function TripsPage() {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const router = useRouter();
 
-  const fetchTrips = useCallback(async (currentUser: User | null, isDev: boolean) => {
+  const fetchTrips = useCallback(async (currentUser: User | null) => {
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      let isAdmin = isDev;
-      if (currentUser) {
-        const userDocSnap = await getDoc(doc(db, 'users', currentUser.uid));
-        const userData = userDocSnap.data();
-        isAdmin = isAdmin || userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
-      }
+      const userDocSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      const userData = userDocSnap.data();
+      const isAdmin = userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
 
       const tripsRef = collection(db, 'trips');
       const tripsQuery = isAdmin
@@ -37,9 +39,9 @@ export default function TripsPage() {
         : query(
             tripsRef,
             or(
-              where('ownerId', '==', currentUser!.uid),
-              where('collaboratorIds', 'array-contains', currentUser!.uid),
-              where('collaboratorEmails', 'array-contains', currentUser!.email),
+              where('ownerId', '==', currentUser.uid),
+              where('collaboratorIds', 'array-contains', currentUser.uid),
+              where('collaboratorEmails', 'array-contains', currentUser.email),
             ),
           );
 
@@ -74,15 +76,14 @@ export default function TripsPage() {
   }, []);
 
   useEffect(() => {
-    const isDev = process.env.NODE_ENV === 'development';
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser && !isDev) {
+      if (!currentUser) {
         router.push('/login');
         return;
       }
 
       setUser(currentUser);
-      void fetchTrips(currentUser, isDev);
+      void fetchTrips(currentUser);
     });
 
     return () => unsubscribe();
@@ -134,7 +135,7 @@ export default function TripsPage() {
             title="여행 목록을 불러오지 못했습니다"
             description={error}
             actionLabel="다시 시도"
-            onAction={() => void fetchTrips(user, process.env.NODE_ENV === 'development')}
+            onAction={() => void fetchTrips(user)}
           />
         </div>
       </div>
@@ -145,7 +146,7 @@ export default function TripsPage() {
     <div className="editorial-page">
       <div className="editorial-container editorial-main">
         <div className="editorial-rule-label flex items-center justify-between gap-4 py-4">
-          <span><strong>01</strong> / Trip index</span>
+          <span>Trip index</span>
           <span className="hidden sm:inline">Pack to Go / Field notes in progress</span>
         </div>
 

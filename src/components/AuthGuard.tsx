@@ -12,16 +12,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const isDev = process.env.NODE_ENV === 'development';
-
-    if (isDev) {
-      // Development mode intentionally bypasses approval checks for local previews.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAuthorized(true);
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         if (pathname !== '/login') {

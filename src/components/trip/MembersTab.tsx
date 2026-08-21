@@ -80,7 +80,7 @@ export default function MembersTab({
     <section className="editorial-section !pt-0" aria-labelledby="members-title">
       <div className="editorial-section-heading">
         <div>
-          <p className="editorial-kicker">05 / Members</p>
+          <p className="editorial-kicker">Members</p>
           <h2 id="members-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">
             함께 쓰는 여정.
           </h2>

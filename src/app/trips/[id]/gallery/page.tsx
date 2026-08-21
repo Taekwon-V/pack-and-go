@@ -195,7 +195,7 @@ export default function GalleryPage() {
     <section className="editorial-section !pt-0" aria-labelledby="gallery-title">
       <div className="editorial-section-heading">
         <div>
-          <p className="editorial-kicker">06 / Gallery</p>
+          <p className="editorial-kicker">Gallery</p>
           <h1 id="gallery-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">장면을 모으는 곳.</h1>
         </div>
         <p className="hidden max-w-[18ch] text-right text-[0.62rem] font-bold uppercase leading-[1.7] tracking-[0.15em] text-[var(--muted)] sm:block">

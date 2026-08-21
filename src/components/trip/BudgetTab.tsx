@@ -119,7 +119,7 @@ export default function BudgetTab({ tripId, trip, userProfiles }: BudgetTabProps
     <section className="editorial-section !pt-0" aria-labelledby="budget-title">
       <div className="editorial-section-heading">
         <div>
-          <p className="editorial-kicker">04 / Budget ledger</p>
+          <p className="editorial-kicker">Budget ledger</p>
           <h2 id="budget-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">
             숫자를 맞추는 여행.
           </h2>

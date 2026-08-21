@@ -5,14 +5,23 @@ import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import EditorialImage from '@/components/EditorialImage';
 import { EDITORIAL_HERO_ALT, EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
 import { auth } from '@/lib/firebase';
-
 function LoginContent() {
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('로그인 중 오류가 발생했습니다.');
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      await signInWithPopup(auth, provider);
+    } catch (error: unknown) {
+      console.error('Login error details:', error);
+      const err = error as { code?: string; message?: string };
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+      if (err.code === 'auth/unauthorized-domain') {
+        alert('로그인 실패 (auth/unauthorized-domain):\nFirebase 콘솔 > Authentication > Settings > Authorized domains(승인된 도메인)에 localhost를 추가해야 합니다.');
+        return;
+      }
+      alert(`로그인 중 오류가 발생했습니다: ${err.code || err.message || '알 수 없는 오류'}`);
     }
   };
 

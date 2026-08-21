@@ -18,40 +18,25 @@ export default function DestinationMap({
   embedUrl,
   externalUrl,
 }: DestinationMapProps) {
-  const [mapState, setMapState] = useState<MapState>('loading');
+  const [hasError, setHasError] = useState(!embedUrl);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setMapState('error'), 6000);
-
-    return () => window.clearTimeout(timeoutId);
+    setHasError(!embedUrl);
   }, [embedUrl]);
-
-  const showFallback = mapState === 'error';
 
   return (
     <div className="editorial-map-frame" aria-label={`${title} 지도`}>
-      {!showFallback && (
+      {!hasError && embedUrl ? (
         <iframe
           src={embedUrl}
           title={`${title} 지도`}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          onLoad={() => setMapState('loaded')}
-          onError={() => setMapState('error')}
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
         />
-      )}
-
-      {mapState === 'loading' && (
-        <div className="editorial-map-state" role="status">
-          <div>
-            <MapPin className="mx-auto mb-3 h-7 w-7 text-[var(--olive)]" aria-hidden="true" />
-            <p className="editorial-map-state-title">지도를 불러오는 중입니다</p>
-            <p className="editorial-map-state-copy">{query}</p>
-          </div>
-        </div>
-      )}
-
-      {showFallback && (
+      ) : (
         <div className="editorial-map-fallback" role="status">
           <div>
             <MapPin className="mx-auto mb-3 h-7 w-7 text-[var(--terra)]" aria-hidden="true" />
@@ -72,9 +57,9 @@ export default function DestinationMap({
         </div>
       )}
 
-      {mapState === 'loaded' && (
+      {isLoaded && (
         <div className="editorial-map-caption" aria-hidden="true">
-          <span>CHatan, Okinawa / Map</span>
+          <span>{query} / Map</span>
           <span>N / 01</span>
         </div>
       )}

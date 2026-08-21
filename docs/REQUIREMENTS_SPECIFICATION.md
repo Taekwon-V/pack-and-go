@@ -46,7 +46,7 @@
 | :--- | :--- | :--- | :--- |
 | **FR-AUTH-01** | 구글 소셜 로그인 | - Firebase Authentication의 `GoogleAuthProvider`를 통한 팝업(`signInWithPopup`) 로그인 지원<br>- 로그인 완료 시 인증 상태 자동 감지 및 인가 검증 프로세스 진입 | 필수 (High) |
 | **FR-AUTH-02** | 화이트리스트 인가 검증 | - 로그인 사용자의 이메일이 인가 대상인지 확인:<br>&nbsp;&nbsp;1) 시스템 관리자 이메일 일치 여부<br>&nbsp;&nbsp;2) `allowed_emails` 컬렉션에 등록 여부<br>&nbsp;&nbsp;3) 참여 중인 여행의 `collaboratorEmails` 포함 여부<br>&nbsp;&nbsp;4) 레거시 `collaboratorIds` 포함 여부<br>- 인가된 경우 `users` 컬렉션에 프로필 문서 생성/업데이트 (`status: 'approved'`) | 필수 (High) |
-| **FR-AUTH-03** | 비인가 접근 차단 | - 화이트리스트에 없는 사용자는 접근 권한 없음 안내 얼럿 출력 후 강제 로그아웃(`signOut`) 및 `/login`으로 리다이렉션<br>- 개발 모드(`process.env.NODE_ENV === 'development'`)에서는 검증 절차 우회 지원 | 필수 (High) |
+| **FR-AUTH-03** | 비인가 접근 차단 | - 화이트리스트에 없는 사용자는 접근 권한 없음 안내 얼럿 출력 후 강제 로그아웃(`signOut`) 및 `/login`으로 리다이렉션<br>- 로컬 개발 및 프로덕션 전 환경에서 실제 구글 인증 및 화이트리스트 검증 적용 | 필수 (High) |
 | **FR-AUTH-04** | 라우트 보호 (AuthGuard) | - `/login` 및 `/api/*` 경로를 제외한 모든 보호 경로에 대해 인증 여부 및 인가 상태 검사<br>- 미인증 상태 시 로그인 페이지로 자동 전환, 로딩 중 스피너 표시 | 필수 (High) |
 | **FR-AUTH-05** | 로그아웃 | - 상단 네비게이션 바에서 로그아웃 버튼 클릭 시 세션 종료 및 `/login` 화면으로 이동 | 필수 (High) |
 
@@ -67,7 +67,7 @@
 
 | 요구사항 ID | 기능명 | 상세 요구사항 명세 | 중요도 |
 | :--- | :--- | :--- | :--- |
-| **FR-OVR-01** | 여행 공통 헤더 | - 여행 상세 진입 시 여행 제목, 목적지, 여행 기간, 참여자 아바타 목록을 헤더 영역에 상시 제공<br>- 사이드바/모바일 상단 탭(홈, 일정표, 예산, 멤버 관리, 갤러리) 제공 | 필수 (High) |
+| **FR-OVR-01** | 여행 공통 헤더 | - 여행 상세 진입 시 여행 제목, 목적지, 여행 기간, 참여자 아바타 목록을 헤더 영역에 상시 제공<br>- 사이드바/모바일 상단 탭(홈, 일정표, 예산, 갤러리, 멤버 관리) 제공 | 필수 (High) |
 | **FR-OVR-02** | 여행지 지도 임베드 | - `mapQuery` 또는 `destination` 기반 Google Maps 임베드 iframe 렌더링<br>- 로딩 인디케이터 표시 및 6초 초과 시 대체 UI(외부 Google Maps 바로가기 링크)로 Fallback 처리 | 필수 (High) |
 | **FR-OVR-03** | 여행지 소개 및 테마 | - `destinationDesc`가 있을 경우 줄바꿈을 반영하여 텍스트 렌더링<br>- 오키나와 등 특정 목적지일 경우 사전 정의된 테마 카드(자연, 역사문화, 융합문화, 액티비티) 렌더링 | 보통 (Medium) |
 | **FR-OVR-04** | 날씨 및 추천 복장 | - 예상 기온 및 기상 상태(`weatherDesc`) 안내 카드 제공<br>- 기후에 적합한 추천 복장 가이드(`clothingDesc`) 카드 제공 | 보통 (Medium) |
@@ -122,14 +122,9 @@
 
 ---
 
-### 3.8 Gemini AI 여행 비서 (FR-AI)
+### 3.8 Gemini AI 여행 비서 (FR-AI, 비활성화/제거됨)
 
-| 요구사항 ID | 기능명 | 상세 요구사항 명세 | 중요도 |
-| :--- | :--- | :--- | :--- |
-| **FR-AI-01** | 스트리밍 챗봇 대화 | - Vercel AI SDK의 `useChat`과 Next.js Route Handler(`streamText`)를 활용한 실시간 토큰 스트리밍 응답 | 필수 (High) |
-| **FR-AI-02** | 여행지 맞춤형 프롬프트 | - 현재 여행의 목적지(`destination`)를 AI 시스템 지시문(System Instruction)에 주입하여 특화된 가이드 답변 생성 | 필수 (High) |
-| **FR-AI-03** | 대화 세션 및 편의 기능 | - Enter 키 전송, Shift+Enter 줄바꿈, 실시간 스크롤 하단 이동, 응답 대기 로딩 애니메이션 제공 | 보통 (Medium) |
-| **FR-AI-04** | 오류 및 예외 처리 | - Gemini API 키 누락 또는 서버 에러 발생 시 사용자 친화적인 에러 배너 노출 | 보통 (Medium) |
+*참고: 사용자 요구사항에 따라 07 / Travel Assistant 기능은 UI 및 서비스 범위에서 완전히 제거되었습니다.*
 
 ---
 

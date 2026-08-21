@@ -7,7 +7,6 @@ import { CalendarDays, ChevronLeft, Image as ImageIcon, Home, Users, Wallet } fr
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { TripProvider, useTrip } from '@/components/trip/TripContext';
-import TripContextHeader from '@/components/trip/TripContextHeader';
 
 function TripLayoutContent({ children, id }: { children: React.ReactNode; id: string }) {
   const pathname = usePathname();
@@ -19,21 +18,17 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   const isOwner = trip?.ownerId === user?.uid;
-  const sectionLabels: Record<string, string> = {
-    itinerary: 'Itinerary / 일정표',
-    budget: 'Budget / 예산',
-    gallery: 'Gallery / 갤러리',
-    members: 'Members / 멤버 관리',
-  };
-  const sectionKey = pathname.split('/').filter(Boolean).at(-1) || '';
-  const sectionLabel = sectionLabels[sectionKey];
   const navItems = [
     { name: 'Overview', shortName: '홈', href: `/trips/${id}`, icon: Home },
     { name: 'Itinerary', shortName: '일정', href: `/trips/${id}/itinerary`, icon: CalendarDays },
     { name: 'Budget', shortName: '예산', href: `/trips/${id}/budget`, icon: Wallet },
-    ...(isOwner ? [{ name: 'Members', shortName: '멤버', href: `/trips/${id}/members`, icon: Users }] : []),
     { name: 'Gallery', shortName: '갤러리', href: `/trips/${id}/gallery`, icon: ImageIcon },
+    ...(isOwner ? [{ name: 'Members', shortName: '멤버', href: `/trips/${id}/members`, icon: Users }] : []),
   ];
 
   return (
@@ -71,8 +66,7 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
           })}
         </nav>
 
-        {sectionLabel && <TripContextHeader sectionLabel={sectionLabel} />}
-        <main className="editorial-main !pt-0">{children}</main>
+        <main className="editorial-main !pt-8">{children}</main>
 
         <footer className="editorial-footer">
           <span>Pack to Go / {trip?.destination || 'Travel journal'}</span>
