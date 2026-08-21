@@ -3,18 +3,20 @@
 import { Calendar, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useTrip } from './TripContext';
+import { toDate } from '@/lib/tripFormatters';
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function formatDateWithDay(value: unknown): string {
+  const date = toDate(value);
+  if (!date) return '날짜 미정';
+  return `${date.toLocaleDateString('ko-KR')} (${WEEKDAYS[date.getDay()]})`;
+}
 
 export default function TripHeader() {
   const { trip, userProfiles } = useTrip();
-
-  const sd = trip.startDate as any;
-  const ed = trip.endDate as any;
-  const getDayStr = (d: Date) => ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
-  const sDate = sd?.toDate ? sd.toDate() : new Date(sd || Date.now());
-  const eDate = ed?.toDate ? ed.toDate() : new Date(ed || Date.now());
-  
-  const sStr = `${sDate.toLocaleDateString()} (${getDayStr(sDate)})`;
-  const eStr = `${eDate.toLocaleDateString()} (${getDayStr(eDate)})`;
+  const sStr = formatDateWithDay(trip.startDate);
+  const eStr = formatDateWithDay(trip.endDate);
 
   const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
   const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
@@ -22,33 +24,34 @@ export default function TripHeader() {
   const extraCount = uniqueParticipants.length - 6;
 
   return (
-    <section className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-[80px]" />
-      
+    <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-indigo-50 blur-[80px]" />
+
       <div className="relative z-10">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
+        <div className="mb-6 flex flex-col justify-between gap-6 md:flex-row md:items-start">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">{trip.title}</h1>
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">{trip.title}</h1>
             {trip.concept && (
-              <p className="text-indigo-400 font-medium text-lg flex items-center mb-6">
-                <span className="w-8 h-[1px] bg-indigo-400 mr-3"></span>
-                "{trip.concept}"
+              <p className="mb-6 mt-3 flex items-center text-lg font-medium text-indigo-400">
+                <span className="mr-3 h-px w-8 bg-indigo-400" />
+                <span>“{trip.concept}”</span>
               </p>
             )}
           </div>
-          
-          {/* Avatars */}
-          <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
-            <span className="text-sm font-medium text-slate-600 pl-2">멤버 ({uniqueParticipants.length}명)</span>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-2.5">
+            <span className="pl-2 text-sm font-medium text-slate-600">멤버 ({uniqueParticipants.length}명)</span>
             <div className="flex -space-x-3 pr-2">
-              {displayUsers.map((uid, i) => {
+              {displayUsers.map((uid, index) => {
                 const profile = userProfiles[uid];
                 const initial = profile?.displayName?.charAt(0) || profile?.email?.charAt(0) || '?';
                 return (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600 z-10 relative overflow-hidden shadow-sm">
+                  <div
+                    key={uid || index}
+                    className="relative z-10 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-indigo-100 text-sm font-bold text-indigo-600 shadow-sm"
+                  >
                     {profile?.photoURL ? (
-                      <Image src={profile.photoURL} alt="Profile" fill className="object-cover" sizes="40px" />
+                      <Image src={profile.photoURL} alt="프로필" fill className="object-cover" sizes="40px" />
                     ) : (
                       initial.toUpperCase()
                     )}
@@ -56,7 +59,7 @@ export default function TripHeader() {
                 );
               })}
               {extraCount > 0 && (
-                <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500 z-10 shadow-sm">
+                <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-sm font-bold text-slate-500 shadow-sm">
                   +{extraCount}
                 </div>
               )}
@@ -65,13 +68,13 @@ export default function TripHeader() {
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <div className="flex items-center bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
-            <Calendar className="w-5 h-5 mr-3 text-indigo-600" />
-            <span className="text-slate-700 font-medium">{sStr} ~ {eStr}</span>
+          <div className="flex items-center rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5">
+            <Calendar className="mr-3 h-5 w-5 text-indigo-600" aria-hidden="true" />
+            <span className="font-medium text-slate-700">{sStr} ~ {eStr}</span>
           </div>
-          <div className="flex items-center bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
-            <MapPin className="w-5 h-5 mr-3 text-indigo-600" />
-            <span className="text-slate-700 font-medium">{trip.destination}</span>
+          <div className="flex items-center rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5">
+            <MapPin className="mr-3 h-5 w-5 text-indigo-600" aria-hidden="true" />
+            <span className="font-medium text-slate-700">{trip.destination}</span>
           </div>
         </div>
       </div>

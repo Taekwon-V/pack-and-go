@@ -7,6 +7,7 @@ import { use } from 'react';
 import { TripProvider } from '@/components/trip/TripContext';
 
 import { useTrip } from '@/components/trip/TripContext';
+import TripContextHeader from '@/components/trip/TripContextHeader';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useEffect, useState } from 'react';
@@ -22,6 +23,14 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
   }, []);
 
   const isOwner = trip?.ownerId === user?.uid;
+  const sectionLabels: Record<string, string> = {
+    itinerary: '일정표',
+    budget: '예산',
+    gallery: '갤러리',
+    members: '멤버 관리',
+  };
+  const sectionKey = pathname.split('/').filter(Boolean).at(-1) || '';
+  const sectionLabel = sectionLabels[sectionKey];
 
   const navItems = [
     { name: '홈', href: `/trips/${id}`, icon: Home },
@@ -71,6 +80,7 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
       <main className="flex-1 w-full min-w-0 overflow-y-auto">
         <div className="h-full bg-[#f5f5f9] p-4 md:p-8">
           <div className="max-w-7xl mx-auto w-full">
+            {sectionLabel && <TripContextHeader sectionLabel={sectionLabel} />}
             {children}
           </div>
         </div>

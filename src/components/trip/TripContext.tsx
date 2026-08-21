@@ -1,20 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react';
-import TripHeader from './TripHeader';
+import StatePanel from '@/components/StatePanel';
+import type { TripContextValue, TripLoadState, TripRecord, UserProfile } from './types';
 
-interface TripContextType {
-  trip: any;
-  userProfiles: Record<string, any>;
-  loading: boolean;
-  refetch: () => Promise<void>;
-  mapUrl: string;
-}
-
-const TripContext = createContext<TripContextType | null>(null);
+const TripContext = createContext<TripContextValue | null>(null);
 
 export function useTrip() {
   const context = useContext(TripContext);
@@ -22,77 +14,127 @@ export function useTrip() {
   return context;
 }
 
-export function TripProvider({ tripId, children }: { tripId: string, children: ReactNode }) {
-  const [trip, setTrip] = useState<any | null>(null);
-  const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
+export function TripProvider({ tripId, children }: { tripId: string; children: ReactNode }) {
+  const [trip, setTrip] = useState<TripRecord | null>(null);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<TripLoadState>('loading');
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTripData = useCallback(async () => {
+    setLoading(true);
+    setState('loading');
+    setError(null);
+    setTrip(null);
+    setUserProfiles({});
+
     try {
       const docRef = doc(db, 'trips', tripId);
       const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const fetchedTrip = { id: docSnap.id, ...docSnap.data() } as any;
-        setTrip(fetchedTrip);
 
-        const uids = new Set<string>();
-        if (fetchedTrip.ownerId) uids.add(fetchedTrip.ownerId);
-        if (fetchedTrip.collaboratorIds) {
-          fetchedTrip.collaboratorIds.forEach((uid: string) => uids.add(uid));
-        }
-
-        const profiles: Record<string, any> = {};
-        await Promise.all(Array.from(uids).map(async (uid) => {
-          try {
-            const uSnap = await getDoc(doc(db, 'users', uid));
-            if (uSnap.exists()) {
-              profiles[uid] = uSnap.data();
-            }
-          } catch(e) {
-            console.error("Failed to fetch user profile", uid);
-          }
-        }));
-        setUserProfiles(profiles);
+      if (!docSnap.exists()) {
+        setState('not-found');
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching trip:", error);
+
+      const fetchedTrip = { id: docSnap.id, ...docSnap.data() } as TripRecord;
+      setTrip(fetchedTrip);
+
+      const uids = new Set<string>();
+      if (fetchedTrip.ownerId) uids.add(fetchedTrip.ownerId);
+      fetchedTrip.collaboratorIds?.forEach((uid) => uids.add(uid));
+
+      const profiles: Record<string, UserProfile> = {};
+      await Promise.all(
+        Array.from(uids).map(async (uid) => {
+          try {
+            const userSnapshot = await getDoc(doc(db, 'users', uid));
+            if (userSnapshot.exists()) {
+              profiles[uid] = userSnapshot.data() as UserProfile;
+            }
+          } catch (profileError) {
+            console.error('Failed to fetch user profile', uid, profileError);
+          }
+        }),
+      );
+      setUserProfiles(profiles);
+      setState('ready');
+    } catch (fetchError) {
+      console.error('Error fetching trip:', fetchError);
+      setError('여행 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      setState('error');
     } finally {
       setLoading(false);
     }
   }, [tripId]);
 
   useEffect(() => {
-    fetchTripData();
+    // The provider owns the initial Firebase request and its loading/error transitions.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTripData();
   }, [fetchTripData]);
 
-  if (loading) {
+  if (loading || state === 'loading') {
     return (
-      <div className="flex-1 min-h-screen flex items-center justify-center p-8 bg-transparent">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
+        <StatePanel
+          variant="loading"
+          title="여행 정보를 불러오는 중입니다"
+          description="잠시만 기다려주세요. 여행 일정과 멤버 정보를 준비하고 있습니다."
+        />
       </div>
     );
   }
 
-  if (!trip) {
+  if (state === 'not-found') {
     return (
-      <div className="flex-1 p-8 flex items-center justify-center h-full">
-        <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full border border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900 mb-2">여행 정보를 찾을 수 없습니다</h2>
-          <p className="text-slate-500">삭제되었거나 접근 권한이 없습니다.</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
+        <StatePanel
+          variant="not-found"
+          title="여행 정보를 찾을 수 없습니다"
+          description="삭제되었거나 접근 권한이 없는 여행일 수 있습니다. 내 여행 목록에서 다른 여행을 선택해주세요."
+          actionLabel="내 여행으로 돌아가기"
+          actionHref="/trips"
+        />
       </div>
     );
   }
 
-  let mapQueryStr = trip.mapQuery || trip.destination;
-  if (mapQueryStr.includes('오키나와')) {
-    mapQueryStr = '26.4941, 127.9902'; // Exact center of Okinawa island
+  if (state === 'error') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
+        <StatePanel
+          variant="error"
+          title="여행 정보를 불러오지 못했습니다"
+          description={error || '네트워크 상태를 확인한 뒤 다시 시도해주세요.'}
+          actionLabel="다시 시도"
+          onAction={() => void fetchTripData()}
+        />
+      </div>
+    );
   }
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQueryStr)}&z=9&output=embed`;
+
+  if (!trip) return null;
+
+  const mapQuery = trip.mapQuery || trip.destination;
+  const embedQuery = mapQuery.includes('오키나와') ? '26.4941, 127.9902' : mapQuery;
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(embedQuery)}&z=9&output=embed`;
+  const externalMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
   return (
-    <TripContext.Provider value={{ trip, userProfiles, loading, refetch: fetchTripData, mapUrl }}>
+    <TripContext.Provider
+      value={{
+        trip,
+        userProfiles,
+        loading,
+        state,
+        error,
+        refetch: fetchTripData,
+        mapQuery,
+        mapUrl,
+        externalMapUrl,
+      }}
+    >
       {children}
     </TripContext.Provider>
   );

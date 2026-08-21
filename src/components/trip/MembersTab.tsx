@@ -3,13 +3,13 @@ import { doc, updateDoc, arrayRemove, arrayUnion, setDoc } from 'firebase/firest
 import { db } from '@/lib/firebase';
 import { Users, Mail, UserX, Crown, ShieldCheck, Loader2, Plus } from 'lucide-react';
 import Image from 'next/image';
+import type { UserProfile } from './types';
 
 interface Trip {
   id: string;
-  ownerId: string;
+  ownerId?: string;
   collaboratorIds?: string[];
   collaboratorEmails?: string[];
-  [key: string]: any;
 }
 
 export default function MembersTab({ 
@@ -18,7 +18,7 @@ export default function MembersTab({
   onUpdate 
 }: { 
   trip: Trip, 
-  userProfiles: Record<string, any>,
+  userProfiles: Record<string, UserProfile>,
   onUpdate: () => void 
 }) {
   const [emailInput, setEmailInput] = useState('');
@@ -53,7 +53,7 @@ export default function MembersTab({
 
       setEmailInput('');
       onUpdate(); // Trigger parent re-fetch
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding member:', error);
       setErrorMsg('멤버 추가 중 오류가 발생했습니다.');
     } finally {

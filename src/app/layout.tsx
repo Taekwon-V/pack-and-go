@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tour - Your Travel Companion",
-  description: "Plan trips and share memories",
+  title: 'Pack to Go - 여행 동반자',
+  description: '여행을 계획하고 함께 추억을 공유하세요.',
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
+    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col bg-[#f5f5f9] text-slate-900">
         <AuthGuard>
           <Navbar />

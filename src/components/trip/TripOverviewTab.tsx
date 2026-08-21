@@ -1,7 +1,17 @@
-import { MapPin, Navigation, CloudSun, Shirt, ImageIcon, Palmtree, Castle, Coffee, Compass } from 'lucide-react';
+import { Navigation, CloudSun, Shirt, ImageIcon, Palmtree, Castle, Coffee, Compass } from 'lucide-react';
 import ImageCarousel from '@/components/ImageCarousel';
+import DestinationMap from '@/components/DestinationMap';
+import type { TripRecord } from './types';
 
-export default function TripOverviewTab({ trip, mapUrl }: { trip: any, mapUrl: string }) {
+export default function TripOverviewTab({
+  trip,
+  mapUrl,
+  externalMapUrl,
+}: {
+  trip: TripRecord;
+  mapUrl: string;
+  externalMapUrl: string;
+}) {
   return (
     <div className="grid grid-cols-1 gap-8">
       {/* 여행지 소개 영역 */}
@@ -13,18 +23,12 @@ export default function TripOverviewTab({ trip, mapUrl }: { trip: any, mapUrl: s
           </h2>
           
           {/* Map */}
-          <div className="w-full h-96 rounded-2xl overflow-hidden mb-6 border border-slate-200 relative">
-            <iframe 
-              src={mapUrl}
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-              className="absolute inset-0"
-            />
-            <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-slate-900/5 rounded-2xl"></div>
-          </div>
+          <DestinationMap
+            title={trip.destination}
+            query={trip.mapQuery || trip.destination}
+            embedUrl={mapUrl}
+            externalUrl={externalMapUrl}
+          />
 
           {/* Description */}
           <div className="mb-8">

@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2, PieChart, Wallet, CreditCard, ArrowRightLeft, ArrowUpRight, ArrowDownRight, CircleDollarSign } from 'lucide-react';
+import StatePanel from '@/components/StatePanel';
+import { getPayerLabel, toDate } from '@/lib/tripFormatters';
+import type { TripRecord, UserProfile } from './types';
+import { PieChart, Wallet, ArrowRightLeft, ArrowUpRight, ArrowDownRight, CircleDollarSign } from 'lucide-react';
 
 interface Expense {
   id: string;
   category: string;
   amount: number;
   description: string;
-  date: any;
+  date: unknown;
   paidBy: string;
 }
 
@@ -39,49 +42,83 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: '기타'
 };
 
-export default function BudgetTab({ tripId }: { tripId: string }) {
+interface BudgetTabProps {
+  tripId: string;
+  trip: TripRecord;
+  userProfiles: Record<string, UserProfile>;
+}
+
+export default function BudgetTab({ tripId, trip, userProfiles }: BudgetTabProps) {
   const [budget, setBudget] = useState<BudgetDoc | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBudget = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const budgetsQuery = query(collection(db, 'trips', tripId, 'budgets'));
+      const querySnapshot = await getDocs(budgetsQuery);
+      if (!querySnapshot.empty) {
+        const budgetDoc = querySnapshot.docs[0];
+        setBudget({ id: budgetDoc.id, ...budgetDoc.data() } as BudgetDoc);
+      } else {
+        setBudget(null);
+      }
+    } catch (fetchError) {
+      console.error('Error fetching budget:', fetchError);
+      setError('예산 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }, [tripId]);
 
   useEffect(() => {
-    const fetchBudget = async () => {
-      try {
-        const q = query(collection(db, 'trips', tripId, 'budgets'));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          // Assuming one master budget document for now
-          const doc = querySnapshot.docs[0];
-          setBudget({ id: doc.id, ...doc.data() } as BudgetDoc);
-        }
-      } catch (error) {
-        console.error("Error fetching budget:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBudget();
-  }, [tripId]);
+    // The request owns the loading/error transitions for this data panel.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchBudget();
+  }, [fetchBudget]);
 
   if (loading) {
     return (
-      <div className="p-12 flex justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
+      <StatePanel
+        variant="loading"
+        title="예산 정보를 불러오는 중입니다"
+        description="여행 비용과 지출 내역을 준비하고 있습니다."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <StatePanel
+        variant="error"
+        title="예산 정보를 불러오지 못했습니다"
+        description={error}
+        actionLabel="다시 시도"
+        onAction={() => void fetchBudget()}
+      />
     );
   }
 
   if (!budget) {
     return (
-      <div className="p-8 bg-white rounded-3xl shadow-sm text-center border border-slate-200">
-        <p className="text-slate-500">예산 정보가 없습니다. (테스트 데이터 시딩 필요)</p>
-      </div>
+      <StatePanel
+        variant="empty"
+        icon={Wallet}
+        title="아직 예산 정보가 없습니다"
+        description="여행 관리자가 예산을 등록하면 이곳에서 전체 지출과 항목별 내역을 확인할 수 있습니다."
+      />
     );
   }
 
   // Calculate totals
   const totalSpent = budget.expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const remaining = budget.totalBudget - totalSpent;
-  const spendPercent = Math.min(100, Math.round((totalSpent / budget.totalBudget) * 100));
+  const spendPercent = budget.totalBudget > 0
+    ? Math.min(100, Math.round((totalSpent / budget.totalBudget) * 100))
+    : 0;
 
   // Calculate by category
   const categoryTotals = budget.expenses.reduce((acc, exp) => {
@@ -92,13 +129,17 @@ export default function BudgetTab({ tripId }: { tripId: string }) {
   // Sort categories by amount
   const sortedCategories = Object.entries(categoryTotals)
     .sort(([, a], [, b]) => b - a)
-    .map(([category, amount]) => ({ category, amount, percent: Math.round((amount / totalSpent) * 100) }));
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percent: totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0,
+    }));
 
   // Sort expenses by date
   const sortedExpenses = [...budget.expenses].sort((a, b) => {
-    const dA = a.date?.toDate ? a.date.toDate().getTime() : new Date(a.date).getTime();
-    const dB = b.date?.toDate ? b.date.toDate().getTime() : new Date(b.date).getTime();
-    return dB - dA; // Descending
+    const dA = toDate(a.date)?.getTime() || 0;
+    const dB = toDate(b.date)?.getTime() || 0;
+    return dB - dA;
   });
 
   const formatCurrency = (val: number) => {
@@ -174,19 +215,18 @@ export default function BudgetTab({ tripId }: { tripId: string }) {
 
         {/* 3. 지출 상세 내역 */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center">
             <h3 className="text-lg font-bold text-slate-900 flex items-center">
               <ArrowRightLeft className="w-5 h-5 mr-2 text-indigo-500" /> 상세 지출 내역
             </h3>
-            <button className="text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors">
-              + 내역 추가
-            </button>
           </div>
 
           <div className="space-y-3">
             {sortedExpenses.map((exp) => {
-              const eDate = exp.date?.toDate ? exp.date.toDate() : new Date(exp.date);
-              const dateStr = eDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' });
+              const eDate = toDate(exp.date);
+              const dateStr = eDate
+                ? eDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
+                : '날짜 미정';
               
               return (
                 <div key={exp.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-sm transition-all bg-slate-50 hover:bg-white">
@@ -205,7 +245,9 @@ export default function BudgetTab({ tripId }: { tripId: string }) {
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-slate-900">{formatCurrency(exp.amount)}</div>
-                    <div className="text-xs text-slate-400 mt-1">결제: {exp.paidBy === 'owner' ? '방장' : '멤버'}</div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      결제: {getPayerLabel(exp.paidBy, trip, userProfiles)}
+                    </div>
                   </div>
                 </div>
               );

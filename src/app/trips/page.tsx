@@ -1,20 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, query, or, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plane, Calendar, MapPin, Loader2 } from 'lucide-react';
+import { Plane, Calendar, MapPin } from 'lucide-react';
+import StatePanel from '@/components/StatePanel';
+import { formatTripDateRange, getDaysUntil } from '@/lib/tripFormatters';
+import type { UserProfile } from '@/components/trip/types';
 
 interface Trip {
   id: string;
   title: string;
   destination: string;
-  startDate: string;
-  endDate: string;
+  startDate?: unknown;
+  endDate?: unknown;
   coverImage?: string;
   ownerId?: string;
   collaboratorIds?: string[];
@@ -23,88 +26,110 @@ interface Trip {
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const router = useRouter();
 
-  useEffect(() => {
-    const isDev = process.env.NODE_ENV === 'development';
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser && !isDev) {
-        router.push('/login');
-        return;
+  const fetchTrips = useCallback(async (currentUser: User | null, isDev: boolean) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let isAdmin = isDev;
+      if (currentUser) {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.data();
+        isAdmin = isAdmin || userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
       }
-      if (currentUser) setUser(currentUser);
 
-      try {
-        let isAdmin = isDev;
-        if (currentUser) {
-          const userDocRef = doc(db, 'users', currentUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          const userData = userDocSnap.data();
-          isAdmin = isAdmin || userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
-        }
-
-        const tripsRef = collection(db, 'trips');
-        let q;
-        
-        if (isAdmin) {
-          // 관리자 및 로컬 개발자는 모든 여행을 조회할 수 있음
-          q = query(tripsRef);
-        } else {
-          // 일반 사용자는 자신이 소유자이거나 참여자인 여행만 조회
-          q = query(
+      const tripsRef = collection(db, 'trips');
+      const tripsQuery = isAdmin
+        ? query(tripsRef)
+        : query(
             tripsRef,
             or(
               where('ownerId', '==', currentUser!.uid),
               where('collaboratorIds', 'array-contains', currentUser!.uid),
-              where('collaboratorEmails', 'array-contains', currentUser!.email)
-            )
+              where('collaboratorEmails', 'array-contains', currentUser!.email),
+            ),
           );
-        }
 
-        const snapshot = await getDocs(q);
-        const fetchedTrips = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Trip[];
-        
-        setTrips(fetchedTrips);
+      const snapshot = await getDocs(tripsQuery);
+      const fetchedTrips = snapshot.docs.map((tripDoc) => ({
+        id: tripDoc.id,
+        ...tripDoc.data(),
+      })) as Trip[];
+      setTrips(fetchedTrips);
 
-        // Fetch participant profiles
-        const uids = new Set<string>();
-        fetchedTrips.forEach(t => {
-          if (t.ownerId) uids.add(t.ownerId);
-          if (t.collaboratorIds) t.collaboratorIds.forEach(id => uids.add(id));
-        });
-        
-        const profiles: Record<string, any> = {};
-        await Promise.all(Array.from(uids).map(async (uid) => {
+      const uids = new Set<string>();
+      fetchedTrips.forEach((trip) => {
+        if (trip.ownerId) uids.add(trip.ownerId);
+        trip.collaboratorIds?.forEach((id) => uids.add(id));
+      });
+
+      const profiles: Record<string, UserProfile> = {};
+      await Promise.all(
+        Array.from(uids).map(async (uid) => {
           try {
-            const uSnap = await getDoc(doc(db, 'users', uid));
-            if (uSnap.exists()) {
-              profiles[uid] = uSnap.data();
-            }
-          } catch(e) {
-            console.error("Failed to fetch user profile", uid);
+            const userSnapshot = await getDoc(doc(db, 'users', uid));
+            if (userSnapshot.exists()) profiles[uid] = userSnapshot.data();
+          } catch (profileError) {
+            console.error('Failed to fetch user profile', uid, profileError);
           }
-        }));
-        setUserProfiles(profiles);
-        
-      } catch (error) {
-        console.error("Error fetching trips:", error);
-      } finally {
-        setLoading(false);
+        }),
+      );
+      setUserProfiles(profiles);
+    } catch (fetchError) {
+      console.error('Error fetching trips:', fetchError);
+      setError('여행 목록을 불러오지 못했습니다. 네트워크 상태를 확인한 뒤 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const isDev = process.env.NODE_ENV === 'development';
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser && !isDev) {
+        router.push('/login');
+        return;
       }
+
+      setUser(currentUser);
+      void fetchTrips(currentUser, isDev);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [fetchTrips, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f9]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="min-h-screen bg-[#f5f5f9] p-8">
+        <div className="mx-auto flex min-h-[28rem] max-w-4xl items-center justify-center">
+          <StatePanel
+            variant="loading"
+            title="여행 목록을 불러오는 중입니다"
+            description="참여 중인 여행과 멤버 정보를 준비하고 있습니다."
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f9] p-8">
+        <div className="mx-auto flex min-h-[28rem] max-w-4xl items-center justify-center">
+          <StatePanel
+            variant="error"
+            title="여행 목록을 불러오지 못했습니다"
+            description={error}
+            actionLabel="다시 시도"
+            onAction={() => void fetchTrips(user, process.env.NODE_ENV === 'development')}
+          />
+        </div>
       </div>
     );
   }
@@ -113,7 +138,7 @@ export default function TripsPage() {
     <div className="min-h-screen bg-[#f5f5f9] p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center justify-center py-8 mb-8">
-          <Image src="/banner.jpg" alt="Pack to GO" width={800} height={450} className="w-full object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
+          <Image src="/banner.jpg" alt="Pack to Go 여행 안내 이미지" width={800} height={450} className="w-full object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
         </div>
 
         <div className="flex justify-between items-center mb-8">
@@ -121,11 +146,12 @@ export default function TripsPage() {
         </div>
 
         {trips.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <Plane className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-800">아직 계획된 여행이 없습니다</h3>
-            <p className="text-slate-500 mt-2">새로운 여행이 게시되기를 기다려주세요!</p>
-          </div>
+          <StatePanel
+            variant="empty"
+            icon={Plane}
+            title="아직 계획된 여행이 없습니다"
+            description="새로운 여행이 게시되거나 초대되면 여기에 표시됩니다."
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {trips.map(trip => (
@@ -139,12 +165,7 @@ export default function TripsPage() {
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div className="bg-slate-50 px-3 py-1 rounded-full text-xs font-semibold text-slate-700 shadow-sm border border-slate-200">
-                        D-{(() => {
-                          const sd = trip.startDate as any;
-                          const dateObj = sd?.toDate ? sd.toDate() : new Date(sd || Date.now());
-                          const diff = dateObj.getTime() - new Date().getTime();
-                          return Math.max(0, Math.ceil(diff / (1000 * 3600 * 24))) || 0;
-                        })()}
+                        D-{getDaysUntil(trip.startDate)}
                       </div>
                     </div>
                     
@@ -157,13 +178,7 @@ export default function TripsPage() {
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex items-center text-sm text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100">
                         <Calendar className="w-4 h-4 mr-2 text-indigo-500" />
-                        {(() => {
-                          const sd = trip.startDate as any;
-                          const ed = trip.endDate as any;
-                          const sStr = sd?.toDate ? sd.toDate().toLocaleDateString() : (sd || '');
-                          const eStr = ed?.toDate ? ed.toDate().toLocaleDateString() : (ed || '');
-                          return `${sStr} ~ ${eStr}`;
-                        })()}
+                        {formatTripDateRange(trip.startDate, trip.endDate)}
                       </div>
                       
                       <div className="flex -space-x-2">

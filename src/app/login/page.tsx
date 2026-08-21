@@ -1,13 +1,10 @@
 'use client';
 
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
 function LoginContent() {
-  const router = useRouter();
-
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -23,7 +20,7 @@ function LoginContent() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Pack to GO
+          Pack to Go
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           세상을 탐험하고, 여정을 공유하세요

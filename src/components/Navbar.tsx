@@ -1,14 +1,12 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 
 export default function Navbar() {
-  const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +17,7 @@ export default function Navbar() {
       if (currentUser) {
         setUser(currentUser);
       } else if (isDev) {
-        setUser({ displayName: 'Dev User', email: 'dev@localhost' } as any);
+        setUser({ displayName: 'Dev User', email: 'dev@localhost' } as User);
       } else {
         setUser(null);
       }
@@ -33,9 +31,6 @@ export default function Navbar() {
     router.push('/login');
   };
   
-  const navLinks = [
-    { name: '내 여행', href: '/trips' },
-  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-xl">
@@ -46,9 +41,8 @@ export default function Navbar() {
               href="/" 
               className="flex items-center gap-3 transition-opacity hover:opacity-80"
             >
-              <style dangerouslySetInnerHTML={{__html: "@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');"}} />
               <div className="flex flex-col justify-center">
-                <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-500" style={{ fontFamily: "'Dancing Script', cursive", lineHeight: '1.1' }}>
+                <span className="text-2xl font-bold tracking-tight text-indigo-600">
                   Pack to Go
                 </span>
                 <span className="text-[11px] text-slate-500 font-medium tracking-wide">
@@ -63,7 +57,7 @@ export default function Navbar() {
               user ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-900/50 text-sm font-bold text-indigo-400">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
                       {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
                     </div>
                     <span className="hidden text-sm font-medium text-slate-700 sm:block">

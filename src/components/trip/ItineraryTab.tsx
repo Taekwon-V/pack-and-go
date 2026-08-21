@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { MapPin, Clock, Loader2, ChevronDown, ChevronUp, Map } from 'lucide-react';
+import { MapPin, Clock, ChevronDown, ChevronUp, Map, CalendarDays } from 'lucide-react';
+import StatePanel from '@/components/StatePanel';
+import { toDate } from '@/lib/tripFormatters';
 
 interface Activity {
   time: string;
@@ -15,34 +17,46 @@ interface Activity {
 interface DailyItinerary {
   id: string;
   dayNumber: number;
-  date: any; // Firestore Timestamp
+  date: unknown; // Firestore Timestamp
   activities: Activity[];
 }
 
 export default function ItineraryTab({ tripId }: { tripId: string }) {
   const [itineraries, setItineraries] = useState<DailyItinerary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
 
-  useEffect(() => {
-    const fetchItineraries = async () => {
-      try {
-        const q = query(collection(db, 'trips', tripId, 'itineraries'), orderBy('dayNumber', 'asc'));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyItinerary));
-        setItineraries(data);
-        if (data.length > 0) {
-          setSelectedDay(data[0].dayNumber);
-        }
-      } catch (error) {
-        console.error("Error fetching itineraries:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItineraries();
+  const fetchItineraries = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const itinerariesQuery = query(
+        collection(db, 'trips', tripId, 'itineraries'),
+        orderBy('dayNumber', 'asc'),
+      );
+      const querySnapshot = await getDocs(itinerariesQuery);
+      const data = querySnapshot.docs.map((itineraryDoc) => ({
+        id: itineraryDoc.id,
+        ...itineraryDoc.data(),
+      } as DailyItinerary));
+      setItineraries(data);
+      if (data.length > 0) setSelectedDay(data[0].dayNumber);
+    } catch (fetchError) {
+      console.error('Error fetching itineraries:', fetchError);
+      setError('일정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
   }, [tripId]);
+
+  useEffect(() => {
+    // The request owns the loading/error transitions for this data panel.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchItineraries();
+  }, [fetchItineraries]);
 
   const toggleItem = (index: number) => {
     setExpandedItems(prev => ({ ...prev, [index]: !prev[index] }));
@@ -55,17 +69,34 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
 
   if (loading) {
     return (
-      <div className="p-12 flex justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
+      <StatePanel
+        variant="loading"
+        title="일정을 불러오는 중입니다"
+        description="여행 날짜별 계획을 준비하고 있습니다."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <StatePanel
+        variant="error"
+        title="일정을 불러오지 못했습니다"
+        description={error}
+        actionLabel="다시 시도"
+        onAction={() => void fetchItineraries()}
+      />
     );
   }
 
   if (itineraries.length === 0) {
     return (
-      <div className="p-8 bg-white rounded-3xl shadow-sm text-center border border-slate-200">
-        <p className="text-slate-500">등록된 일정이 없습니다.</p>
-      </div>
+      <StatePanel
+        variant="empty"
+        icon={CalendarDays}
+        title="아직 등록된 일정이 없습니다"
+        description="여행 관리자가 일정을 추가하면 날짜별 계획이 여기에 표시됩니다."
+      />
     );
   }
 
@@ -76,15 +107,18 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
       {/* 1단계: 전체 일정 요약 (Horizontal Day Selector) */}
       <div className="bg-slate-50 p-4 border-b border-slate-200 overflow-x-auto hide-scrollbar flex gap-3">
         {itineraries.map((day) => {
-          const dDate = day.date?.toDate ? day.date.toDate() : new Date(day.date);
-          const dateStr = dDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' });
+          const dDate = toDate(day.date);
+          const dateStr = dDate
+            ? dDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
+            : '날짜 미정';
           const isSelected = selectedDay === day.dayNumber;
 
           return (
             <button
               key={day.id}
               onClick={() => setSelectedDay(day.dayNumber)}
-              className={`flex-shrink-0 flex flex-col items-center justify-center px-6 py-3 rounded-2xl transition-all ${
+              aria-pressed={isSelected}
+              className={`flex-shrink-0 flex flex-col items-center justify-center px-6 py-3 rounded-2xl transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
                 isSelected 
                   ? 'bg-indigo-600 text-white shadow-md scale-105' 
                   : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
@@ -132,8 +166,17 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
                       </div>
                       
                       {/* 3단계 토글 화살표 */}
-                      <button className="text-slate-400 hover:text-indigo-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
-                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      <button
+                        type="button"
+                        aria-expanded={isExpanded}
+                        aria-label={`${activity.title} 상세 ${isExpanded ? '닫기' : '열기'}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleItem(index);
+                        }}
+                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      >
+                        {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                       </button>
                     </div>
 

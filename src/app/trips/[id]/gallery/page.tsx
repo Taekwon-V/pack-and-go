@@ -11,16 +11,16 @@ import {
   addDoc, 
   serverTimestamp,
   doc,
-  deleteDoc
 } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { Camera, X, Send, Image as ImageIcon, Loader2, Plus } from 'lucide-react';
+import { Camera, X, Send, Image as ImageIcon, Loader2 } from 'lucide-react';
+import StatePanel from '@/components/StatePanel';
 
 interface Photo {
   id: string;
   url: string;
   uploadedBy: string;
-  createdAt: any;
+  createdAt: unknown;
 }
 
 interface Comment {
@@ -28,7 +28,7 @@ interface Comment {
   text: string;
   authorId: string;
   authorName: string;
-  createdAt: any;
+  createdAt: unknown;
 }
 
 const compressImage = (file: File): Promise<string> => {
@@ -74,6 +74,7 @@ const compressImage = (file: File): Promise<string> => {
 };
 
 import { useTrip } from '@/components/trip/TripContext';
+import { toDate } from '@/lib/tripFormatters';
 
 export default function GalleryPage() {
   const params = useParams();
@@ -87,6 +88,9 @@ export default function GalleryPage() {
   
   const [user, setUser] = useState<User | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [photosLoading, setPhotosLoading] = useState(true);
+  const [photosError, setPhotosError] = useState<string | null>(null);
+  const [photoRetryKey, setPhotoRetryKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
@@ -101,19 +105,29 @@ export default function GalleryPage() {
 
   useEffect(() => {
     if (!tripId) return;
-    const photosRef = collection(db, 'trips', tripId, 'photos');
-    const q = query(photosRef, orderBy('createdAt', 'desc'));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedPhotos = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Photo[];
-      setPhotos(fetchedPhotos);
-    });
+    const photosRef = collection(db, 'trips', tripId, 'photos');
+    const photosQuery = query(photosRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(
+      photosQuery,
+      (snapshot) => {
+        const fetchedPhotos = snapshot.docs.map((photoDoc) => ({
+          id: photoDoc.id,
+          ...photoDoc.data(),
+        })) as Photo[];
+        setPhotos(fetchedPhotos);
+        setPhotosLoading(false);
+      },
+      (snapshotError) => {
+        console.error('Error fetching gallery photos:', snapshotError);
+        setPhotosLoading(false);
+        setPhotosError('사진을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      },
+    );
 
     return () => unsubscribe();
-  }, [tripId]);
+  }, [photoRetryKey, tripId]);
 
   useEffect(() => {
     if (!selectedPhoto || !tripId) return;
@@ -175,11 +189,14 @@ export default function GalleryPage() {
       });
       
       setIsUploading(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Compression/Upload error:', error);
       setIsUploading(false);
       // Firebase document size limit is 1MB. If image is too big even after compression, it will throw an error here.
-      if (error.code === 'resource-exhausted') {
+      const errorCode = typeof error === 'object' && error !== null && 'code' in error
+        ? error.code
+        : undefined;
+      if (errorCode === 'resource-exhausted') {
         alert('이미지 용량이 너무 큽니다. 다른 사진을 선택해주세요.');
       } else {
         alert('이미지 저장 중 오류가 발생했습니다.');
@@ -197,16 +214,6 @@ export default function GalleryPage() {
     
     try {
       const { deleteDoc } = await import('firebase/firestore');
-      const { deleteObject } = await import('firebase/storage');
-      
-      // 1. Delete from storage (try, but ignore if fails due to wrong path logic)
-      try {
-        // extract path from download URL or just rely on deleteDoc
-        // For complete cleanup we'd need the exact reference, but we don't store the path.
-        // Let's just delete the doc for now. The file might remain in storage if we don't have the path.
-      } catch (e) {}
-
-      // 2. Delete firestore doc
       await deleteDoc(doc(db, 'trips', tripId, 'photos', selectedPhoto.id));
       setSelectedPhoto(null);
     } catch (error) {
@@ -243,34 +250,53 @@ export default function GalleryPage() {
           </div>
         </header>
 
-        {/* Gallery Grid */}
-        <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-          {photos.map((photo) => (
-            <div 
-              key={photo.id} 
-              className="relative group cursor-pointer break-inside-avoid overflow-hidden rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300"
-              onClick={() => setSelectedPhoto(photo)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={photo.url} 
-                alt="Trip photo" 
-                className="w-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 font-medium tracking-wide transition-opacity duration-300 backdrop-blur-sm bg-black/30 px-4 py-2 rounded-full">
-                  크게 보기
-                </span>
+        {photosLoading ? (
+          <StatePanel
+            variant="loading"
+            title="사진을 불러오는 중입니다"
+            description="여행 멤버가 공유한 순간들을 준비하고 있습니다."
+          />
+        ) : photosError ? (
+          <StatePanel
+            variant="error"
+            title="갤러리를 불러오지 못했습니다"
+            description={photosError}
+            actionLabel="다시 시도"
+            onAction={() => {
+              setPhotos([]);
+              setPhotosLoading(true);
+              setPhotosError(null);
+              setPhotoRetryKey((currentKey) => currentKey + 1);
+            }}
+          />
+        ) : photos.length === 0 ? (
+          <StatePanel
+            variant="empty"
+            icon={ImageIcon}
+            title="아직 사진이 없습니다"
+            description="방장이 첫 번째 여행 사진을 올리면 이곳에서 함께 확인할 수 있습니다."
+          />
+        ) : (
+          <div className="columns-2 gap-4 space-y-4 md:columns-3 lg:columns-4">
+            {photos.map((photo) => (
+              <div
+                key={photo.id}
+                className="group relative cursor-pointer break-inside-avoid overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:shadow-xl"
+                onClick={() => setSelectedPhoto(photo)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.url}
+                  alt="여행 사진"
+                  className="w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/20">
+                  <span className="rounded-full bg-black/30 px-4 py-2 font-medium tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100">
+                    크게 보기
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {photos.length === 0 && !isUploading && (
-          <div className="flex flex-col items-center justify-center py-32 text-gray-400">
-            <ImageIcon className="w-16 h-16 mb-4 text-gray-300" />
-            <p className="text-lg font-medium">아직 사진이 없습니다.</p>
-            <p className="text-sm mt-1">첫 번째 사진을 올려보세요!</p>
+            ))}
           </div>
         )}
       </div>
@@ -356,8 +382,7 @@ export default function GalleryPage() {
                           {comment.authorName}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {comment.createdAt?.toDate ? 
-                            new Date(comment.createdAt.toDate()).toLocaleDateString() : ''}
+                          {toDate(comment.createdAt)?.toLocaleDateString('ko-KR') || ''}
                         </span>
                       </div>
                       <p className="text-gray-700 text-sm bg-gray-100/70 p-3 rounded-2xl rounded-tl-none inline-block max-w-[85%] break-words">
