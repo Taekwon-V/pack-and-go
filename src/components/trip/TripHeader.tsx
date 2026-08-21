@@ -4,12 +4,17 @@ import { CalendarDays, MapPin, Users } from 'lucide-react';
 import { useTrip } from './TripContext';
 import { formatTripDateRange, getProfileLabel, getDaysUntil } from '@/lib/tripFormatters';
 import EditorialImage from '@/components/EditorialImage';
-import { EDITORIAL_HERO_ALT, EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
+import { EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
 
 export default function TripHeader() {
   const { trip, userProfiles } = useTrip();
-  const imageSource = typeof trip.coverImage === 'string' && trip.coverImage ? trip.coverImage : EDITORIAL_HERO_IMAGE;
-  const imageAlt = trip.coverImage ? `${trip.destination} 여행 대표 이미지` : EDITORIAL_HERO_ALT;
+  const imageSource =
+    typeof trip.coverImage === 'string' && trip.coverImage
+      ? trip.coverImage
+      : Array.isArray(trip.gallery) && trip.gallery.length > 0 && typeof trip.gallery[0] === 'string'
+      ? trip.gallery[0]
+      : EDITORIAL_HERO_IMAGE;
+  const imageAlt = trip.coverImage ? `${trip.destination} 여행 대표 이미지` : `${trip.destination} 대표 풍경`;
 
   const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
   const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];

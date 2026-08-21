@@ -35,9 +35,36 @@ const OKINAWA_HIGHLIGHTS: Array<{ title: string; description: string; icon: Luci
   },
 ];
 
+const GERMANY_HIGHLIGHTS: Array<{ title: string; description: string; icon: LucideIcon }> = [
+  {
+    title: '동화 속 백조의 고성',
+    description: '디즈니 성의 모티브가 된 노이슈반슈타인 성과 알프스 산맥의 웅장한 자연 경관을 감상합니다.',
+    icon: Compass,
+  },
+  {
+    title: '중세의 숨결, 로맨틱 가도',
+    description: '로텐부르크와 딘켈스뷜 등 성벽과 붉은 지붕이 고스란히 보존된 완벽한 중세 마을을 탐방합니다.',
+    icon: MapPin,
+  },
+  {
+    title: '맥주와 와인의 본고장',
+    description: '바이에른 정통 학센과 뮌헨 바이스비어, 알테 마인교 위에서 즐기는 낭만적인 프랑켄 와인.',
+    icon: Users,
+  },
+  {
+    title: '아우토반 가을 로드트립',
+    description: '황금빛 단풍으로 물든 남독일의 아름다운 가도와 유네스코 바로크 궁전을 달리는 힐링 여행.',
+    icon: Compass,
+  },
+];
+
 export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOverviewTabProps) {
   const gallery = trip.gallery && trip.gallery.length > 0 ? trip.gallery : EDITORIAL_GALLERY;
-  const highlights = trip.destination.includes('오키나와') ? OKINAWA_HIGHLIGHTS : OKINAWA_HIGHLIGHTS.slice(0, 3);
+  const highlights = trip.destination.includes('오키나와')
+    ? OKINAWA_HIGHLIGHTS
+    : trip.destination.includes('독일') || trip.destination.toLowerCase().includes('germany')
+    ? GERMANY_HIGHLIGHTS
+    : OKINAWA_HIGHLIGHTS.slice(0, 3);
 
   return (
     <div>
@@ -46,7 +73,7 @@ export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOv
           <article className="editorial-article">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 id="destination-title" className="editorial-kicker">The destination / 01</h2>
-              <span className="editorial-display text-[1.2rem]">Naha — Chatan</span>
+              <span className="editorial-display text-[1.2rem]">{trip.destination}</span>
             </div>
 
             <p className="editorial-article-lede">
@@ -78,7 +105,7 @@ export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOv
 
           <aside className="editorial-map-column" aria-label="여행지 지도와 사진">
             <div className="mb-5 flex items-center justify-between gap-4">
-              <span className="editorial-kicker">Chatan, Okinawa / Map</span>
+              <span className="editorial-kicker">{trip.mapQuery || trip.destination} / Map</span>
               <MapPin className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />
             </div>
             <DestinationMap

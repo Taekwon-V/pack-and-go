@@ -1,11 +1,14 @@
 export type TripLoadState = 'loading' | 'ready' | 'not-found' | 'error';
 
+export type TripStatus = 'planned' | 'in-progress' | 'completed';
+
 export interface TripRecord {
   id: string;
   title: string;
   destination: string;
   startDate?: unknown;
   endDate?: unknown;
+  coverImage?: string;
   ownerId?: string;
   collaboratorIds?: string[];
   collaboratorEmails?: string[];
