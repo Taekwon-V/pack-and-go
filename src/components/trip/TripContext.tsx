@@ -49,9 +49,7 @@ export function TripProvider({ tripId, children }: { tripId: string; children: R
         Array.from(uids).map(async (uid) => {
           try {
             const userSnapshot = await getDoc(doc(db, 'users', uid));
-            if (userSnapshot.exists()) {
-              profiles[uid] = userSnapshot.data() as UserProfile;
-            }
+            if (userSnapshot.exists()) profiles[uid] = userSnapshot.data() as UserProfile;
           } catch (profileError) {
             console.error('Failed to fetch user profile', uid, profileError);
           }
@@ -76,40 +74,46 @@ export function TripProvider({ tripId, children }: { tripId: string; children: R
 
   if (loading || state === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
-        <StatePanel
-          variant="loading"
-          title="여행 정보를 불러오는 중입니다"
-          description="잠시만 기다려주세요. 여행 일정과 멤버 정보를 준비하고 있습니다."
-        />
+      <div className="editorial-page">
+        <div className="editorial-container editorial-main">
+          <StatePanel
+            variant="loading"
+            title="여행 정보를 불러오는 중입니다"
+            description="잠시만 기다려주세요. 여행 일정과 멤버 정보를 준비하고 있습니다."
+          />
+        </div>
       </div>
     );
   }
 
   if (state === 'not-found') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
-        <StatePanel
-          variant="not-found"
-          title="여행 정보를 찾을 수 없습니다"
-          description="삭제되었거나 접근 권한이 없는 여행일 수 있습니다. 내 여행 목록에서 다른 여행을 선택해주세요."
-          actionLabel="내 여행으로 돌아가기"
-          actionHref="/trips"
-        />
+      <div className="editorial-page">
+        <div className="editorial-container editorial-main">
+          <StatePanel
+            variant="not-found"
+            title="여행 정보를 찾을 수 없습니다"
+            description="삭제되었거나 접근 권한이 없는 여행일 수 있습니다. 내 여행 목록에서 다른 여행을 선택해주세요."
+            actionLabel="내 여행으로 돌아가기"
+            actionHref="/trips"
+          />
+        </div>
       </div>
     );
   }
 
   if (state === 'error') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f9] p-8">
-        <StatePanel
-          variant="error"
-          title="여행 정보를 불러오지 못했습니다"
-          description={error || '네트워크 상태를 확인한 뒤 다시 시도해주세요.'}
-          actionLabel="다시 시도"
-          onAction={() => void fetchTripData()}
-        />
+      <div className="editorial-page">
+        <div className="editorial-container editorial-main">
+          <StatePanel
+            variant="error"
+            title="여행 정보를 불러오지 못했습니다"
+            description={error || '네트워크 상태를 확인한 뒤 다시 시도해주세요.'}
+            actionLabel="다시 시도"
+            onAction={() => void fetchTripData()}
+          />
+        </div>
       </div>
     );
   }

@@ -18,10 +18,10 @@ const variantConfig: Record<
   StatePanelVariant,
   { icon: LucideIcon; iconClassName: string; role?: 'status' | 'alert' }
 > = {
-  loading: { icon: Loader2, iconClassName: 'text-indigo-500', role: 'status' },
-  empty: { icon: Inbox, iconClassName: 'text-slate-400' },
-  error: { icon: AlertCircle, iconClassName: 'text-rose-500', role: 'alert' },
-  'not-found': { icon: MapPin, iconClassName: 'text-slate-400' },
+  loading: { icon: Loader2, iconClassName: 'text-[var(--olive)]', role: 'status' },
+  empty: { icon: Inbox, iconClassName: 'text-[var(--terra)]' },
+  error: { icon: AlertCircle, iconClassName: 'text-[var(--terra)]', role: 'alert' },
+  'not-found': { icon: MapPin, iconClassName: 'text-[var(--muted)]' },
 };
 
 export default function StatePanel({
@@ -38,38 +38,37 @@ export default function StatePanel({
   const isLoading = variant === 'loading';
 
   return (
-    <div
-      className="flex min-h-56 w-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm"
-      role={config.role}
-    >
-      <Icon
-        className={`mb-4 h-10 w-10 ${config.iconClassName} ${isLoading ? 'animate-spin' : ''}`}
-        aria-hidden="true"
-      />
-      <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-      {description && (
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">{description}</p>
+    <section className="editorial-state-panel" role={config.role} aria-live={config.role ? 'polite' : undefined}>
+      {isLoading ? (
+        <div className="editorial-state-skeleton" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : (
+        <span className="editorial-state-mark" aria-hidden="true">
+          <Icon className={`h-5 w-5 ${config.iconClassName}`} />
+        </span>
       )}
+      <h2 className="editorial-state-title">{title}</h2>
+      {description && <p className="editorial-state-copy">{description}</p>}
 
       {actionLabel && actionHref && (
-        <Link
-          href={actionHref}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        >
-          {actionLabel}
-        </Link>
+        <div className="editorial-state-action">
+          <Link href={actionHref} className="editorial-button editorial-focus" data-variant="quiet">
+            {actionLabel}
+          </Link>
+        </div>
       )}
 
       {actionLabel && !actionHref && onAction && (
-        <button
-          type="button"
-          onClick={onAction}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        >
-          <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          {actionLabel}
-        </button>
+        <div className="editorial-state-action">
+          <button type="button" onClick={onAction} className="editorial-button editorial-focus" data-variant="quiet">
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            {actionLabel}
+          </button>
+        </div>
       )}
-    </div>
+    </section>
   );
 }

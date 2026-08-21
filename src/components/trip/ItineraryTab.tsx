@@ -1,7 +1,9 @@
+'use client';
+
 import { useCallback, useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { CalendarDays, ChevronDown, ChevronUp, Clock3, Map, MapPin } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { MapPin, Clock, ChevronDown, ChevronUp, Map, CalendarDays } from 'lucide-react';
 import StatePanel from '@/components/StatePanel';
 import { toDate } from '@/lib/tripFormatters';
 
@@ -17,7 +19,7 @@ interface Activity {
 interface DailyItinerary {
   id: string;
   dayNumber: number;
-  date: unknown; // Firestore Timestamp
+  date: unknown;
   activities: Activity[];
 }
 
@@ -59,22 +61,16 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
   }, [fetchItineraries]);
 
   const toggleItem = (index: number) => {
-    setExpandedItems(prev => ({ ...prev, [index]: !prev[index] }));
+    setExpandedItems((previous) => ({ ...previous, [index]: !previous[index] }));
   };
 
   const openGoogleMaps = (location: string) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
-    return (
-      <StatePanel
-        variant="loading"
-        title="일정을 불러오는 중입니다"
-        description="여행 날짜별 계획을 준비하고 있습니다."
-      />
-    );
+    return <StatePanel variant="loading" title="일정을 불러오는 중입니다" description="여행 날짜별 계획을 준비하고 있습니다." />;
   }
 
   if (error) {
@@ -100,131 +96,111 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
     );
   }
 
-  const currentDayData = itineraries.find(d => d.dayNumber === selectedDay);
+  const currentDayData = itineraries.find((day) => day.dayNumber === selectedDay);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      {/* 1단계: 전체 일정 요약 (Horizontal Day Selector) */}
-      <div className="bg-slate-50 p-4 border-b border-slate-200 overflow-x-auto hide-scrollbar flex gap-3">
+    <section className="editorial-section !pt-0" aria-labelledby="itinerary-title">
+      <div className="editorial-section-heading">
+        <div>
+          <p className="editorial-kicker">03 / Itinerary</p>
+          <h2 id="itinerary-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">
+            하루의 결을 따라.
+          </h2>
+        </div>
+        <span className="hidden text-right text-[0.62rem] font-bold uppercase tracking-[0.15em] text-[var(--muted)] sm:block">
+          {currentDayData ? `${currentDayData.activities.length} stops` : 'No stops'}<br />Okinawa / field route
+        </span>
+      </div>
+
+      <div className="editorial-day-tabs" aria-label="여행 날짜 선택">
         {itineraries.map((day) => {
-          const dDate = toDate(day.date);
-          const dateStr = dDate
-            ? dDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
+          const date = toDate(day.date);
+          const dateString = date
+            ? date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
             : '날짜 미정';
           const isSelected = selectedDay === day.dayNumber;
 
           return (
             <button
               key={day.id}
+              type="button"
+              className="editorial-day-tab editorial-focus"
+              data-active={isSelected}
               onClick={() => setSelectedDay(day.dayNumber)}
               aria-pressed={isSelected}
-              className={`flex-shrink-0 flex flex-col items-center justify-center px-6 py-3 rounded-2xl transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-                isSelected 
-                  ? 'bg-indigo-600 text-white shadow-md scale-105' 
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
-              }`}
             >
-              <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
-                {dateStr}
-              </span>
-              <span className="font-bold">DAY {day.dayNumber}</span>
+              <span>{dateString}</span>
+              <span>Day {String(day.dayNumber).padStart(2, '0')}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 2단계: 일별 일정 상세 (Timeline View) */}
-      <div className="p-6 md:p-8">
-        {currentDayData && currentDayData.activities.length > 0 ? (
-          <div className="relative border-l-2 border-indigo-100 ml-4 md:ml-6 space-y-8 pb-4">
-            {currentDayData.activities.map((activity, index) => {
-              const isExpanded = expandedItems[index];
-              return (
-                <div key={index} className="relative pl-8 md:pl-10">
-                  {/* Timeline Dot */}
-                  <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-indigo-500 border-4 border-white shadow-sm"></div>
-                  
-                  {/* Content Card */}
-                  <div 
-                    className={`bg-white rounded-2xl border transition-all cursor-pointer ${
-                      isExpanded ? 'border-indigo-200 shadow-md ring-1 ring-indigo-50' : 'border-slate-100 hover:border-indigo-200 hover:shadow-sm'
-                    }`}
-                    onClick={() => toggleItem(index)}
-                  >
-                    {/* Header (Always visible) */}
-                    <div className="p-4 md:p-5 flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center text-indigo-600 font-semibold text-sm mb-1">
-                          <Clock className="w-4 h-4 mr-1.5" />
-                          {activity.time}
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-2">{activity.title}</h3>
-                        <div className="flex items-center text-slate-600 text-sm">
-                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-                          <span className="truncate">{activity.location}</span>
-                        </div>
+      {currentDayData && currentDayData.activities.length > 0 ? (
+        <div className="editorial-timeline">
+          {currentDayData.activities.map((activity, index) => {
+            const isExpanded = expandedItems[index];
+            const detailsId = `activity-details-${currentDayData.id}-${index}`;
+
+            return (
+              <article key={`${currentDayData.id}-${index}`} className="editorial-timeline-entry">
+                <span className="editorial-timeline-node" aria-hidden="true" />
+                <button
+                  type="button"
+                  className="editorial-timeline-header editorial-focus"
+                  onClick={() => toggleItem(index)}
+                  aria-expanded={isExpanded}
+                  aria-controls={detailsId}
+                >
+                  <span className="editorial-timeline-time">
+                    <Clock3 className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                    {activity.time}
+                  </span>
+                  <span>
+                    <span className="editorial-timeline-title block">{activity.title}</span>
+                    <span className="editorial-timeline-location">
+                      <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
+                      {activity.location}
+                    </span>
+                  </span>
+                  <span className="editorial-timeline-toggle" aria-hidden="true">
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div id={detailsId} className="editorial-timeline-detail">
+                    <span className="text-[0.58rem] font-extrabold uppercase tracking-[0.14em] text-[var(--muted)]">Field note</span>
+                    <div>
+                      <p className="editorial-timeline-detail-copy">{activity.description || '이 일정에 대한 세부 기록을 준비하고 있습니다.'}</p>
+                      <div className="editorial-timeline-detail-actions">
+                        <span className="editorial-timeline-cost">
+                          {activity.costEstimate && activity.costEstimate > 0
+                            ? `예상 비용 ${activity.costEstimate.toLocaleString()}원`
+                            : '예상 비용 없음'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openGoogleMaps(activity.mapQuery || activity.location)}
+                          className="editorial-link-button editorial-focus inline-flex items-center gap-1.5"
+                        >
+                          <Map className="h-3.5 w-3.5" aria-hidden="true" />
+                          지도에서 보기
+                        </button>
                       </div>
-                      
-                      {/* 3단계 토글 화살표 */}
-                      <button
-                        type="button"
-                        aria-expanded={isExpanded}
-                        aria-label={`${activity.title} 상세 ${isExpanded ? '닫기' : '열기'}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleItem(index);
-                        }}
-                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                      >
-                        {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                      </button>
                     </div>
-
-                    {/* 3단계: 세부 내용 (Expanded) */}
-                    {isExpanded && (
-                      <div className="px-5 pb-5 pt-2 border-t border-slate-50 animate-in slide-in-from-top-2 fade-in duration-200">
-                        <div className="bg-slate-50 rounded-xl p-4 space-y-3">
-                          {activity.description && (
-                            <p className="text-slate-700 text-sm leading-relaxed">{activity.description}</p>
-                          )}
-                          
-                          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                            {activity.costEstimate !== undefined && activity.costEstimate > 0 ? (
-                              <div className="inline-flex items-center bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-700">
-                                예상 비용: {activity.costEstimate.toLocaleString()}원
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-500">
-                                예상 비용 없음
-                              </div>
-                            )}
-
-                            {/* 지도 보기 버튼 */}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevents collapsing the accordion
-                                openGoogleMaps(activity.mapQuery || activity.location);
-                              }}
-                              className="inline-flex items-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-colors"
-                            >
-                              <Map className="w-4 h-4 mr-2" />
-                              지도에서 보기
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-slate-500">
-            해당 일자의 일정이 없습니다.
-          </div>
-        )}
-      </div>
-    </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="editorial-state-panel mt-5">
+          <p className="editorial-state-title">해당 일자의 일정이 없습니다</p>
+          <p className="editorial-state-copy">다른 날짜를 선택해 여행의 다음 장면을 확인해보세요.</p>
+        </div>
+      )}
+    </section>
   );
 }

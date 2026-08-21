@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Wallet } from 'lucide-react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import StatePanel from '@/components/StatePanel';
 import { getPayerLabel, toDate } from '@/lib/tripFormatters';
 import type { TripRecord, UserProfile } from './types';
-import { PieChart, Wallet, ArrowRightLeft, ArrowUpRight, ArrowDownRight, CircleDollarSign } from 'lucide-react';
 
 interface Expense {
   id: string;
@@ -22,16 +22,6 @@ interface BudgetDoc {
   expenses: Expense[];
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  flight: 'bg-blue-500',
-  accommodation: 'bg-indigo-500',
-  transport: 'bg-emerald-500',
-  food: 'bg-orange-500',
-  activity: 'bg-rose-500',
-  shopping: 'bg-purple-500',
-  other: 'bg-slate-500'
-};
-
 const CATEGORY_LABELS: Record<string, string> = {
   flight: '항공',
   accommodation: '숙박',
@@ -39,7 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   food: '식비',
   activity: '액티비티',
   shopping: '쇼핑',
-  other: '기타'
+  other: '기타',
 };
 
 interface BudgetTabProps {
@@ -81,13 +71,7 @@ export default function BudgetTab({ tripId, trip, userProfiles }: BudgetTabProps
   }, [fetchBudget]);
 
   if (loading) {
-    return (
-      <StatePanel
-        variant="loading"
-        title="예산 정보를 불러오는 중입니다"
-        description="여행 비용과 지출 내역을 준비하고 있습니다."
-      />
-    );
+    return <StatePanel variant="loading" title="예산 정보를 불러오는 중입니다" description="여행 비용과 지출 내역을 준비하고 있습니다." />;
   }
 
   if (error) {
@@ -113,148 +97,119 @@ export default function BudgetTab({ tripId, trip, userProfiles }: BudgetTabProps
     );
   }
 
-  // Calculate totals
-  const totalSpent = budget.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const expenses = budget.expenses || [];
+  const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const remaining = budget.totalBudget - totalSpent;
-  const spendPercent = budget.totalBudget > 0
-    ? Math.min(100, Math.round((totalSpent / budget.totalBudget) * 100))
-    : 0;
-
-  // Calculate by category
-  const categoryTotals = budget.expenses.reduce((acc, exp) => {
-    acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+  const spendPercent = budget.totalBudget > 0 ? Math.min(100, Math.round((totalSpent / budget.totalBudget) * 100)) : 0;
+  const categoryTotals = expenses.reduce((acc, expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
     return acc;
   }, {} as Record<string, number>);
-
-  // Sort categories by amount
   const sortedCategories = Object.entries(categoryTotals)
-    .sort(([, a], [, b]) => b - a)
+    .sort(([, amountA], [, amountB]) => amountB - amountA)
     .map(([category, amount]) => ({
       category,
       amount,
       percent: totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0,
     }));
-
-  // Sort expenses by date
-  const sortedExpenses = [...budget.expenses].sort((a, b) => {
-    const dA = toDate(a.date)?.getTime() || 0;
-    const dB = toDate(b.date)?.getTime() || 0;
-    return dB - dA;
-  });
-
-  const formatCurrency = (val: number) => {
-    return `${val.toLocaleString()} ${budget.currency === 'JPY' ? '엔' : '원'}`;
-  };
+  const sortedExpenses = [...expenses].sort((a, b) => (toDate(b.date)?.getTime() || 0) - (toDate(a.date)?.getTime() || 0));
+  const formatCurrency = (value: number) => `${value.toLocaleString('ko-KR')} ${budget.currency === 'JPY' ? '엔' : '원'}`;
 
   return (
-    <div className="space-y-6">
-      {/* 1. 요약 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
-          <div className="flex items-center text-slate-500 mb-2 font-medium">
-            <Wallet className="w-5 h-5 mr-2 text-indigo-500" /> 총 예산
-          </div>
-          <div className="text-3xl font-bold text-slate-900">{formatCurrency(budget.totalBudget)}</div>
+    <section className="editorial-section !pt-0" aria-labelledby="budget-title">
+      <div className="editorial-section-heading">
+        <div>
+          <p className="editorial-kicker">04 / Budget ledger</p>
+          <h2 id="budget-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">
+            숫자를 맞추는 여행.
+          </h2>
         </div>
-        
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
-          <div className="flex items-center text-slate-500 mb-2 font-medium">
-            <ArrowUpRight className="w-5 h-5 mr-2 text-rose-500" /> 총 지출
-          </div>
-          <div className="text-3xl font-bold text-slate-900">{formatCurrency(totalSpent)}</div>
-          <div className="mt-2 text-sm text-slate-500">
-            예산의 <span className="font-bold text-rose-500">{spendPercent}%</span> 사용
-          </div>
-        </div>
-
-        <div className={`p-6 rounded-3xl border shadow-sm flex flex-col justify-center ${remaining < 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
-          <div className="flex items-center text-slate-600 mb-2 font-medium">
-            <ArrowDownRight className={`w-5 h-5 mr-2 ${remaining < 0 ? 'text-rose-600' : 'text-emerald-600'}`} /> 남은 금액
-          </div>
-          <div className={`text-3xl font-bold ${remaining < 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
-            {formatCurrency(remaining)}
-          </div>
-        </div>
+        <span className="hidden text-right text-[0.62rem] font-bold uppercase tracking-[0.15em] text-[var(--muted)] sm:block">
+          {formatCurrency(totalSpent)} committed<br />Shared trip / {budget.currency}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 2. 항목별 지출 요약 */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:col-span-1">
-          <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center">
-            <PieChart className="w-5 h-5 mr-2 text-indigo-500" /> 항목별 지출
-          </h3>
-          
-          {/* Progress Bar Chart */}
-          <div className="flex w-full h-4 rounded-full overflow-hidden mb-6 bg-slate-100">
-            {sortedCategories.map((item) => (
-              <div 
-                key={item.category} 
-                className={`h-full ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS.other}`}
-                style={{ width: `${item.percent}%` }}
-                title={`${CATEGORY_LABELS[item.category] || '기타'}: ${item.percent}%`}
-              />
-            ))}
+      <div className="editorial-budget-grid">
+        <div className="editorial-itinerary-column">
+          <div className="flex items-center justify-between gap-4">
+            <span className="editorial-kicker">Category distribution</span>
+            <span className="text-[0.62rem] font-bold text-[var(--muted)]">{spendPercent}% used</span>
           </div>
-
-          {/* Category List */}
-          <div className="space-y-4">
+          <div className="editorial-budget-progress mt-6">
+            <div className="editorial-budget-progress-track" aria-label={`예산 ${spendPercent}% 사용`}>
+              <div className="editorial-budget-progress-fill" style={{ width: `${spendPercent}%` }} />
+            </div>
+          </div>
+          <div className="mt-6">
             {sortedCategories.map((item) => (
-              <div key={item.category} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-3 ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS.other}`}></div>
-                  <span className="text-sm font-medium text-slate-700">{CATEGORY_LABELS[item.category] || item.category}</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-slate-900">{formatCurrency(item.amount)}</div>
-                  <div className="text-xs text-slate-400">{item.percent}%</div>
-                </div>
+              <div key={item.category} className="grid grid-cols-[1fr_auto_auto] gap-4 border-b border-[var(--rule)] py-4 text-[0.78rem]">
+                <span><span className="editorial-ledger-dot" aria-hidden="true" />{CATEGORY_LABELS[item.category] || item.category}</span>
+                <span className="font-extrabold">{formatCurrency(item.amount)}</span>
+                <span className="text-[var(--muted)]">{item.percent}%</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 3. 지출 상세 내역 */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:col-span-2">
-          <div className="mb-6 flex items-center">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center">
-              <ArrowRightLeft className="w-5 h-5 mr-2 text-indigo-500" /> 상세 지출 내역
-            </h3>
+        <aside className="editorial-budget-column" aria-label="Budget summary">
+          <div className="flex items-center justify-between gap-4">
+            <span className="editorial-kicker">Budget ledger</span>
+            <Wallet className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />
           </div>
+          <div className="editorial-budget-stats mt-6">
+            <div>
+              <div className="editorial-budget-stat-label">Total</div>
+              <div className="editorial-budget-stat-value">{formatCurrency(budget.totalBudget)}</div>
+            </div>
+            <div>
+              <div className="editorial-budget-stat-label">Spent</div>
+              <div className="editorial-budget-stat-value">{formatCurrency(totalSpent)}</div>
+            </div>
+            <div>
+              <div className="editorial-budget-stat-label">Remaining</div>
+              <div className="editorial-budget-stat-value" data-tone={remaining < 0 ? 'negative' : 'positive'}>{formatCurrency(remaining)}</div>
+            </div>
+          </div>
+          <div className="editorial-budget-progress">
+            <div className="editorial-budget-progress-meta">
+              <span>{spendPercent}% committed</span>
+              <strong>{formatCurrency(Math.max(0, remaining))} left</strong>
+            </div>
+            <div className="editorial-budget-progress-track">
+              <div className="editorial-budget-progress-fill" style={{ width: `${spendPercent}%` }} />
+            </div>
+          </div>
+        </aside>
+      </div>
 
-          <div className="space-y-3">
-            {sortedExpenses.map((exp) => {
-              const eDate = toDate(exp.date);
-              const dateStr = eDate
-                ? eDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
-                : '날짜 미정';
-              
+      <section className="editorial-ledger-section" aria-labelledby="expense-ledger-title">
+        <div className="editorial-ledger-heading">
+          <h3 id="expense-ledger-title">Expense ledger</h3>
+          <strong>Payer / {getPayerLabel(expenses[0]?.paidBy, trip, userProfiles)}</strong>
+        </div>
+        <table className="editorial-ledger-table">
+          <thead>
+            <tr><th>Expense</th><th>Category</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            {sortedExpenses.map((expense) => {
+              const date = toDate(expense.date);
+              const dateString = date ? date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '날짜 미정';
               return (
-                <div key={exp.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-sm transition-all bg-slate-50 hover:bg-white">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${CATEGORY_COLORS[exp.category] || CATEGORY_COLORS.other}`}>
-                      <CircleDollarSign className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900">{exp.description}</h4>
-                      <div className="flex gap-2 text-xs text-slate-500 font-medium mt-1">
-                        <span>{dateStr}</span>
-                        <span>•</span>
-                        <span className="text-indigo-600">{CATEGORY_LABELS[exp.category] || exp.category}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-slate-900">{formatCurrency(exp.amount)}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      결제: {getPayerLabel(exp.paidBy, trip, userProfiles)}
-                    </div>
-                  </div>
-                </div>
+                <tr key={expense.id}>
+                  <td>
+                    <div className="editorial-ledger-name"><span className="editorial-ledger-dot" aria-hidden="true" />{expense.description}</div>
+                    <div className="editorial-ledger-meta">{dateString} · 결제: {getPayerLabel(expense.paidBy, trip, userProfiles)}</div>
+                  </td>
+                  <td data-label="Category">{CATEGORY_LABELS[expense.category] || expense.category}</td>
+                  <td data-label="Amount" className="editorial-ledger-amount">{formatCurrency(expense.amount)}</td>
+                </tr>
               );
             })}
-          </div>
-        </div>
-      </div>
-    </div>
+          </tbody>
+        </table>
+        {sortedExpenses.length === 0 && <p className="editorial-state-copy mt-5">아직 기록된 지출이 없습니다.</p>}
+      </section>
+    </section>
   );
 }

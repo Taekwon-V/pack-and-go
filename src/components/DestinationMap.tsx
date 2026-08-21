@@ -29,56 +29,55 @@ export default function DestinationMap({
   const showFallback = mapState === 'error';
 
   return (
-    <div className="relative mb-6 h-96 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+    <div className="editorial-map-frame" aria-label={`${title} 지도`}>
       {!showFallback && (
         <iframe
           src={embedUrl}
           title={`${title} 지도`}
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className="absolute inset-0"
           onLoad={() => setMapState('loaded')}
           onError={() => setMapState('error')}
         />
       )}
 
       {mapState === 'loading' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100/95 p-6 text-center">
+        <div className="editorial-map-state" role="status">
           <div>
-            <MapPin className="mx-auto mb-3 h-8 w-8 animate-pulse text-indigo-500" aria-hidden="true" />
-            <p className="font-semibold text-slate-700">지도를 불러오는 중입니다</p>
-            <p className="mt-1 text-sm text-slate-500">{query}</p>
+            <MapPin className="mx-auto mb-3 h-7 w-7 text-[var(--olive)]" aria-hidden="true" />
+            <p className="editorial-map-state-title">지도를 불러오는 중입니다</p>
+            <p className="editorial-map-state-copy">{query}</p>
           </div>
         </div>
       )}
 
       {showFallback && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-slate-100 p-6 text-center">
-          <div className="max-w-sm">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm">
-              <MapPin className="h-6 w-6" aria-hidden="true" />
-            </div>
-            <p className="text-lg font-bold text-slate-900">지도를 표시하지 못했습니다</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              현재 위치는 <span className="font-semibold text-slate-900">{query}</span>입니다. 외부 지도에서 자세한 위치를 확인할 수 있습니다.
+        <div className="editorial-map-fallback" role="status">
+          <div>
+            <MapPin className="mx-auto mb-3 h-7 w-7 text-[var(--terra)]" aria-hidden="true" />
+            <p className="editorial-map-fallback-title">지도를 표시하지 못했습니다</p>
+            <p className="editorial-map-fallback-copy">
+              현재 위치는 <strong>{query}</strong>입니다. 외부 지도에서 자세한 위치를 확인할 수 있습니다.
             </p>
             <a
               href={externalUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="editorial-link-button editorial-focus mt-5 inline-flex items-center gap-2"
             >
               Google 지도에서 열기
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
           </div>
         </div>
       )}
 
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-slate-900/5" />
+      {mapState === 'loaded' && (
+        <div className="editorial-map-caption" aria-hidden="true">
+          <span>CHatan, Okinawa / Map</span>
+          <span>N / 01</span>
+        </div>
+      )}
     </div>
   );
 }

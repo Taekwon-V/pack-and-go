@@ -9,7 +9,7 @@ async function seedOkinawa40s() {
     const userRecord = await adminAuth.getUserByEmail(ownerEmail);
     ownerId = userRecord.uid;
     console.log(`Found owner: ${ownerId}`);
-  } catch (error) {
+  } catch {
     console.log(`User ${ownerEmail} not found, using fallback ownerId: admin`);
   }
 

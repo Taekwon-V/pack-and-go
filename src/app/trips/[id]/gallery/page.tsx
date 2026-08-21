@@ -1,20 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { db, auth } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  serverTimestamp,
-  doc,
-} from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { Camera, X, Send, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Loader2, Send, X } from 'lucide-react';
 import StatePanel from '@/components/StatePanel';
+import { useTrip } from '@/components/trip/TripContext';
+import { toDate } from '@/lib/tripFormatters';
+import { auth, db } from '@/lib/firebase';
 
 interface Photo {
   id: string;
@@ -31,61 +25,46 @@ interface Comment {
   createdAt: unknown;
 }
 
-const compressImage = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
+const compressImage = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
+      const image = new window.Image();
+      image.src = event.target?.result as string;
+      image.onload = () => {
         const canvas = document.createElement('canvas');
-        // Reduce to 800px max to ensure base64 string safely fits within 1MB Firestore limit
-        const MAX_WIDTH = 800;
-        const MAX_HEIGHT = 800;
-        let width = img.width;
-        let height = img.height;
+        const maxWidth = 800;
+        const maxHeight = 800;
+        let width = image.width;
+        let height = image.height;
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
+        if (width > height && width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        } else if (height >= width && height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
         }
 
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        // Convert directly to base64 data URL with 0.7 quality
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(dataUrl);
+        canvas.getContext('2d')?.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
-      img.onerror = (error) => reject(error);
+      image.onerror = reject;
     };
-    reader.onerror = (error) => reject(error);
+    reader.onerror = reject;
   });
-};
-
-import { useTrip } from '@/components/trip/TripContext';
-import { toDate } from '@/lib/tripFormatters';
 
 export default function GalleryPage() {
   const params = useParams();
   const tripId = params.id as string;
   const { trip } = useTrip();
-
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  
   const [user, setUser] = useState<User | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [photosLoading, setPhotosLoading] = useState(true);
@@ -95,9 +74,7 @@ export default function GalleryPage() {
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
+    const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
 
@@ -106,18 +83,13 @@ export default function GalleryPage() {
   useEffect(() => {
     if (!tripId) return;
 
-    const photosRef = collection(db, 'trips', tripId, 'photos');
-    const photosQuery = query(photosRef, orderBy('createdAt', 'desc'));
-
+    const photosQuery = query(collection(db, 'trips', tripId, 'photos'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(
       photosQuery,
       (snapshot) => {
-        const fetchedPhotos = snapshot.docs.map((photoDoc) => ({
-          id: photoDoc.id,
-          ...photoDoc.data(),
-        })) as Photo[];
-        setPhotos(fetchedPhotos);
+        setPhotos(snapshot.docs.map((photoDoc) => ({ id: photoDoc.id, ...photoDoc.data() })) as Photo[]);
         setPhotosLoading(false);
+        setPhotosError(null);
       },
       (snapshotError) => {
         console.error('Error fetching gallery photos:', snapshotError);
@@ -131,19 +103,14 @@ export default function GalleryPage() {
 
   useEffect(() => {
     if (!selectedPhoto || !tripId) return;
-    
-    const commentsRef = collection(db, 'trips', tripId, 'photos', selectedPhoto.id, 'comments');
-    const q = query(commentsRef, orderBy('createdAt', 'asc'));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedComments = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Comment[];
-      setComments(fetchedComments);
-      setTimeout(() => {
-        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+    const commentsQuery = query(
+      collection(db, 'trips', tripId, 'photos', selectedPhoto.id, 'comments'),
+      orderBy('createdAt', 'asc'),
+    );
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      setComments(snapshot.docs.map((commentDoc) => ({ id: commentDoc.id, ...commentDoc.data() })) as Comment[]);
+      window.setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
     return () => unsubscribe();
@@ -161,10 +128,10 @@ export default function GalleryPage() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file || !user || !tripId) return;
-    
+
     if (!isOwner) {
       alert('방장(관리자)만 사진을 업로드할 수 있습니다.');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -178,42 +145,27 @@ export default function GalleryPage() {
 
     try {
       setIsUploading(true);
-      // compressImage now returns a base64 string directly
       const base64String = await compressImage(file);
-      
-      // Save directly to Firestore database instead of Storage to bypass Firebase billing limits
       await addDoc(collection(db, 'trips', tripId, 'photos'), {
         url: base64String,
         uploadedBy: user.uid,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
-      
-      setIsUploading(false);
     } catch (error) {
       console.error('Compression/Upload error:', error);
+      const errorCode = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+      alert(errorCode === 'resource-exhausted' ? '이미지 용량이 너무 큽니다. 다른 사진을 선택해주세요.' : '이미지 저장 중 오류가 발생했습니다.');
+    } finally {
       setIsUploading(false);
-      // Firebase document size limit is 1MB. If image is too big even after compression, it will throw an error here.
-      const errorCode = typeof error === 'object' && error !== null && 'code' in error
-        ? error.code
-        : undefined;
-      if (errorCode === 'resource-exhausted') {
-        alert('이미지 용량이 너무 큽니다. 다른 사진을 선택해주세요.');
-      } else {
-        alert('이미지 저장 중 오류가 발생했습니다.');
-      }
-    }
-    
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleDeletePhoto = async () => {
     if (!selectedPhoto || !isOwner) return;
     if (!confirm('정말 이 사진을 삭제하시겠습니까?')) return;
-    
+
     try {
-      const { deleteDoc } = await import('firebase/firestore');
       await deleteDoc(doc(db, 'trips', tripId, 'photos', selectedPhoto.id));
       setSelectedPhoto(null);
     } catch (error) {
@@ -222,17 +174,16 @@ export default function GalleryPage() {
     }
   };
 
-  const handleAddComment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddComment = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!newComment.trim() || !user || !selectedPhoto || !tripId) return;
 
     try {
-      const commentsRef = collection(db, 'trips', tripId, 'photos', selectedPhoto.id, 'comments');
-      await addDoc(commentsRef, {
+      await addDoc(collection(db, 'trips', tripId, 'photos', selectedPhoto.id, 'comments'), {
         text: newComment.trim(),
         authorId: user.uid,
         authorName: user.displayName || '익명',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
       setNewComment('');
     } catch (error) {
@@ -241,21 +192,20 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12 font-sans relative">
-      <div className="w-full">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">여행 갤러리</h1>
-            <p className="text-gray-500 mt-2">소중한 순간들을 함께 나눠보세요. (최대 5장)</p>
-          </div>
-        </header>
+    <section className="editorial-section !pt-0" aria-labelledby="gallery-title">
+      <div className="editorial-section-heading">
+        <div>
+          <p className="editorial-kicker">06 / Gallery</p>
+          <h1 id="gallery-title" className="editorial-display mt-4 text-[clamp(1.95rem,4vw,3.35rem)] leading-[1.03]">장면을 모으는 곳.</h1>
+        </div>
+        <p className="hidden max-w-[18ch] text-right text-[0.62rem] font-bold uppercase leading-[1.7] tracking-[0.15em] text-[var(--muted)] sm:block">
+          Shared field images<br />Up to 5 photographs
+        </p>
+      </div>
 
+      <div className="mt-5">
         {photosLoading ? (
-          <StatePanel
-            variant="loading"
-            title="사진을 불러오는 중입니다"
-            description="여행 멤버가 공유한 순간들을 준비하고 있습니다."
-          />
+          <StatePanel variant="loading" title="사진을 불러오는 중입니다" description="여행 멤버가 공유한 순간들을 준비하고 있습니다." />
         ) : photosError ? (
           <StatePanel
             variant="error"
@@ -277,146 +227,89 @@ export default function GalleryPage() {
             description="방장이 첫 번째 여행 사진을 올리면 이곳에서 함께 확인할 수 있습니다."
           />
         ) : (
-          <div className="columns-2 gap-4 space-y-4 md:columns-3 lg:columns-4">
-            {photos.map((photo) => (
-              <div
+          <div className="columns-1 gap-5 md:columns-2 lg:columns-3">
+            {photos.map((photo, index) => (
+              <button
                 key={photo.id}
-                className="group relative cursor-pointer break-inside-avoid overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:shadow-xl"
+                type="button"
+                className="editorial-focus group relative mb-5 block w-full break-inside-avoid overflow-hidden border-0 bg-[var(--sand)] p-0 text-left"
                 onClick={() => setSelectedPhoto(photo)}
+                aria-label={`여행 사진 ${index + 1} 크게 보기`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photo.url}
-                  alt="여행 사진"
-                  className="w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
+                  alt={`여행 공유 사진 ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="block w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]"
                 />
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/20">
-                  <span className="rounded-full bg-black/30 px-4 py-2 font-medium tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100">
-                    크게 보기
-                  </span>
-                </div>
-              </div>
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-4 pb-4 pt-12 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  Open field note
+                </span>
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Floating Upload Button (Only for Admin & Max 5) */}
       {isOwner && photos.length < 5 && (
-        <div className="fixed bottom-8 right-8 z-40">
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef} 
-            className="hidden" 
-            onChange={handleFileChange}
-          />
-          <button 
-            onClick={handleUploadClick}
-            disabled={isUploading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center"
-          >
-            {isUploading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <Camera className="w-6 h-6" />
-            )}
+        <div className="editorial-upload">
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <button type="button" onClick={handleUploadClick} disabled={isUploading} className="editorial-upload-button editorial-focus disabled:cursor-not-allowed disabled:opacity-50">
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Camera className="h-4 w-4" aria-hidden="true" />}
+            {isUploading ? 'Uploading' : 'Add photo'}
           </button>
         </div>
       )}
 
-      {isUploading && (
-        <div className="fixed bottom-24 right-8 bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-gray-100 text-sm font-medium text-gray-700 flex items-center gap-3 z-40">
-          <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-          <span>이미지 처리 및 업로드 중...</span>
-        </div>
-      )}
+      {isUploading && <div className="editorial-upload-status"><Loader2 className="mr-2 inline h-3.5 w-3.5 animate-spin text-[var(--terra)]" aria-hidden="true" /> 이미지 처리 및 업로드 중...</div>}
 
-      {/* Photo Detail Modal */}
       {selectedPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8">
-          <div className="w-full max-w-6xl max-h-[90vh] bg-white/10 border border-white/20 rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative glassmorphism">
-            <button 
-              onClick={() => setSelectedPhoto(null)}
-              className="absolute top-4 right-4 md:right-auto md:left-4 z-50 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md"
-            >
-              <X className="w-6 h-6" />
+        <div className="editorial-lightbox p-0" role="dialog" aria-modal="true" aria-label="여행 사진과 댓글">
+          <div className="relative flex h-full max-h-[92dvh] w-full max-w-6xl flex-col overflow-hidden border border-white/20 bg-[var(--paper)] md:flex-row">
+            <button type="button" onClick={() => setSelectedPhoto(null)} className="editorial-lightbox-close editorial-focus" aria-label="사진 닫기">
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
-
-            {/* Image Section */}
-            <div className="w-full md:w-2/3 h-[50vh] md:h-full bg-black/95 flex items-center justify-center relative group">
+            <div className="relative flex min-h-[42dvh] w-full items-center justify-center bg-[var(--ink)] md:h-full md:w-2/3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={selectedPhoto.url} 
-                alt="Selected" 
-                className="max-w-full max-h-full object-contain"
-              />
-              {isOwner && (
-                <button 
-                  onClick={handleDeletePhoto}
-                  className="absolute bottom-4 right-4 z-50 p-3 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full transition-all backdrop-blur-md opacity-0 group-hover:opacity-100"
-                  title="사진 삭제"
-                >
-                  <X className="w-5 h-5 mb-1 hidden" /> 
-                  <span className="font-bold text-sm">삭제</span>
-                </button>
-              )}
+              <img src={selectedPhoto.url} alt="선택한 여행 사진" className="max-h-full max-w-full object-contain" />
+              {isOwner && <button type="button" onClick={handleDeletePhoto} className="editorial-button absolute bottom-4 right-4 !border-[var(--terra)] !bg-[var(--terra)] editorial-focus">Delete</button>}
             </div>
-
-            {/* Comments Section */}
-            <div className="w-full md:w-1/3 h-[40vh] md:h-full bg-white flex flex-col">
-              <div className="p-6 border-b border-gray-100 flex-shrink-0">
-                <h3 className="text-xl font-bold text-gray-900">댓글</h3>
+            <div className="flex min-h-[42dvh] w-full flex-col bg-[var(--paper)] md:h-full md:w-1/3">
+              <div className="border-b border-[var(--rule)] p-5">
+                <p className="editorial-kicker">Conversation</p>
+                <h2 className="editorial-display mt-3 text-2xl">댓글</h2>
               </div>
-
-              <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gray-50/30">
+              <div className="flex-1 space-y-5 overflow-y-auto p-5">
                 {comments.length === 0 ? (
-                  <div className="text-center text-gray-400 py-10">
-                    <p>아직 댓글이 없습니다.</p>
-                  </div>
+                  <p className="py-8 text-center text-[0.78rem] text-[var(--muted)]">아직 댓글이 없습니다.</p>
                 ) : (
-                  comments.map(comment => (
-                    <div key={comment.id} className="flex flex-col space-y-1">
-                      <div className="flex items-baseline space-x-2">
-                        <span className="font-semibold text-gray-900 text-sm">
-                          {comment.authorName}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {toDate(comment.createdAt)?.toLocaleDateString('ko-KR') || ''}
-                        </span>
+                  comments.map((comment) => (
+                    <div key={comment.id}>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[0.75rem] font-extrabold">{comment.authorName}</span>
+                        <span className="text-[0.62rem] text-[var(--muted)]">{toDate(comment.createdAt)?.toLocaleDateString('ko-KR') || ''}</span>
                       </div>
-                      <p className="text-gray-700 text-sm bg-gray-100/70 p-3 rounded-2xl rounded-tl-none inline-block max-w-[85%] break-words">
-                        {comment.text}
-                      </p>
+                      <p className="mt-2 border-l-2 border-[var(--terra)] pl-3 text-[0.78rem] leading-[1.7] text-[var(--muted)]">{comment.text}</p>
                     </div>
                   ))
                 )}
                 <div ref={commentsEndRef} />
               </div>
-
-              {/* Comment Input */}
-              <div className="p-4 border-t border-gray-100 bg-white flex-shrink-0">
-                <form onSubmit={handleAddComment} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="댓글을 입력하세요..."
-                    className="flex-1 bg-gray-100/80 border-none rounded-full px-5 py-3 text-sm focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newComment.trim()}
-                    className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-full transition-colors flex-shrink-0"
-                  >
-                    <Send className="w-5 h-5" />
+              <form onSubmit={handleAddComment} className="border-t border-[var(--rule)] p-4">
+                <label htmlFor="gallery-comment" className="sr-only">댓글 입력</label>
+                <div className="flex items-center gap-2">
+                  <input id="gallery-comment" type="text" value={newComment} onChange={(event) => setNewComment(event.target.value)} placeholder="댓글을 입력하세요..." className="editorial-input" />
+                  <button type="submit" disabled={!newComment.trim()} className="editorial-button editorial-focus !min-h-[2.75rem] !px-3 disabled:cursor-not-allowed disabled:opacity-45" aria-label="댓글 보내기">
+                    <Send className="h-4 w-4" aria-hidden="true" />
                   </button>
-                </form>
-              </div>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
@@ -33,7 +34,7 @@ async function seedOkinawa40s() {
     const userRecord = await adminAuth.getUserByEmail(ownerEmail);
     ownerId = userRecord.uid;
     console.log(`Found owner: ${ownerId}`);
-  } catch (error) {
+  } catch {
     console.log(`User ${ownerEmail} not found, using fallback ownerId: admin`);
   }
 

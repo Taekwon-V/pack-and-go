@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -16,19 +15,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const isDev = process.env.NODE_ENV === 'development';
 
     if (isDev) {
+      // Development mode intentionally bypasses approval checks for local previews.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuthorized(true);
       setLoading(false);
-      // Optional: still listen to auth state in background, but immediately authorize
+      return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        if (!isDev) {
-          if (pathname !== '/login') {
-            router.push('/login');
-          } else {
-            setLoading(false);
-          }
+        if (pathname !== '/login') {
+          router.push('/login');
+        } else {
+          setLoading(false);
         }
         return;
       }
@@ -41,28 +40,21 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        let isApproved = false;
-        
-        // 1. Check if admin
-        if (email === 'inchul17.kim@gmail.com') {
-          isApproved = true;
-        } else {
-          // 2. Check if email is explicitly allowed globally
+        let isApproved = email === 'inchul17.kim@gmail.com';
+
+        if (!isApproved) {
           const { doc, getDoc, collection, query, where, getDocs, setDoc } = await import('firebase/firestore');
           const allowedDoc = await getDoc(doc(db, 'allowed_emails', email));
-          
+
           if (allowedDoc.exists()) {
             isApproved = true;
           } else {
-            // 3. Check if they are a collaborator in ANY trip via collaboratorEmails
             const tripsQuery = query(collection(db, 'trips'), where('collaboratorEmails', 'array-contains', email));
             const tripsSnap = await getDocs(tripsQuery);
             if (!tripsSnap.empty) {
               isApproved = true;
-              // Auto-add to allowed_emails for performance
               await setDoc(doc(db, 'allowed_emails', email), { addedAt: new Date(), source: 'trip_collaborator' });
             } else {
-              // Backward compatibility: check if they are in collaboratorIds
               const oldTripsQuery = query(collection(db, 'trips'), where('collaboratorIds', 'array-contains', user.uid));
               const oldTripsSnap = await getDocs(oldTripsQuery);
               if (!oldTripsSnap.empty) {
@@ -74,11 +66,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
 
         if (isApproved) {
-          // Ensure user document exists and is marked approved
           const { doc, getDoc, setDoc } = await import('firebase/firestore');
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
-          
+
           if (!userSnap.exists()) {
             await setDoc(userRef, {
               email: user.email,
@@ -86,7 +77,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
               photoURL: user.photoURL,
               status: 'approved',
               role: email === 'inchul17.kim@gmail.com' ? 'admin' : 'user',
-              createdAt: new Date()
+              createdAt: new Date(),
             });
           } else if (userSnap.data().status !== 'approved') {
             await setDoc(userRef, { status: 'approved' }, { merge: true });
@@ -98,9 +89,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             setAuthorized(true);
           }
         } else {
-          // Not approved
           await auth.signOut();
-          alert("접근 권한이 없습니다. 관리자에게 이메일 등록을 요청하세요.");
+          alert('접근 권한이 없습니다. 관리자에게 이메일 등록을 요청하세요.');
           if (pathname !== '/login') router.push('/login');
         }
       } catch (error) {
@@ -116,13 +106,21 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="editorial-page editorial-main">
+        <div className="editorial-container">
+          <section className="editorial-state-panel" role="status" aria-live="polite">
+            <div className="editorial-state-skeleton" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <p className="editorial-state-title">Pack to Go를 여는 중입니다</p>
+          </section>
+        </div>
       </div>
     );
   }
 
-  // Allow rendering of public routes without full authorization check
   if (pathname === '/login' || pathname.startsWith('/api/')) {
     return <>{children}</>;
   }

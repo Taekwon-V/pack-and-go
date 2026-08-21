@@ -1,22 +1,36 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/Navbar";
-import AuthGuard from "@/components/AuthGuard";
+import type { Metadata } from 'next';
+import { Montserrat, Noto_Sans_KR, Noto_Serif_KR, Playfair_Display } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/Navbar';
+import AuthGuard from '@/components/AuthGuard';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const montserrat = Montserrat({
+  variable: '--font-montserrat',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const notoSans = Noto_Sans_KR({
+  variable: '--font-noto-sans-kr',
+  display: 'swap',
+  preload: false,
+});
+
+const notoSerif = Noto_Serif_KR({
+  variable: '--font-noto-serif-kr',
+  display: 'swap',
+  preload: false,
+});
+
+const playfair = Playfair_Display({
+  variable: '--font-playfair',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Pack to Go - 여행 동반자',
-  description: '여행을 계획하고 함께 추억을 공유하세요.',
+  title: 'Pack to Go — 여행을 기록하는 방식',
+  description: '함께 계획한 여행을 한 장의 기록으로 남겨보세요.',
 };
 
 export default function RootLayout({
@@ -25,13 +39,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
-      <body className="min-h-full flex flex-col bg-[#f5f5f9] text-slate-900">
+    <html
+      lang="ko"
+      className={`${montserrat.variable} ${notoSans.variable} ${notoSerif.variable} ${playfair.variable} antialiased h-full`}
+    >
+      <body className="editorial-body min-h-[100dvh]">
         <AuthGuard>
           <Navbar />
-          <main className="flex-1 flex flex-col w-full">
-            {children}
-          </main>
+          <main className="flex min-h-0 flex-1 flex-col">{children}</main>
         </AuthGuard>
       </body>
     </html>

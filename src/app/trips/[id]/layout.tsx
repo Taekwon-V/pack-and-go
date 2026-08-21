@@ -1,16 +1,13 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, CalendarDays, Wallet, Users, ChevronLeft, Image as ImageIcon } from 'lucide-react';
-import { use } from 'react';
-import { TripProvider } from '@/components/trip/TripContext';
-
-import { useTrip } from '@/components/trip/TripContext';
-import TripContextHeader from '@/components/trip/TripContextHeader';
+import { use, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { CalendarDays, ChevronLeft, Image as ImageIcon, Home, Users, Wallet } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { useEffect, useState } from 'react';
+import { TripProvider, useTrip } from '@/components/trip/TripContext';
+import TripContextHeader from '@/components/trip/TripContextHeader';
 
 function TripLayoutContent({ children, id }: { children: React.ReactNode; id: string }) {
   const pathname = usePathname();
@@ -24,67 +21,64 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
 
   const isOwner = trip?.ownerId === user?.uid;
   const sectionLabels: Record<string, string> = {
-    itinerary: '일정표',
-    budget: '예산',
-    gallery: '갤러리',
-    members: '멤버 관리',
+    itinerary: 'Itinerary / 일정표',
+    budget: 'Budget / 예산',
+    gallery: 'Gallery / 갤러리',
+    members: 'Members / 멤버 관리',
   };
   const sectionKey = pathname.split('/').filter(Boolean).at(-1) || '';
   const sectionLabel = sectionLabels[sectionKey];
-
   const navItems = [
-    { name: '홈', href: `/trips/${id}`, icon: Home },
-    { name: '일정표', href: `/trips/${id}/itinerary`, icon: CalendarDays },
-    { name: '예산', href: `/trips/${id}/budget`, icon: Wallet },
-    ...(isOwner ? [{ name: '멤버 관리', href: `/trips/${id}/members`, icon: Users }] : []),
-    { name: '갤러리', href: `/trips/${id}/gallery`, icon: ImageIcon },
+    { name: 'Overview', shortName: '홈', href: `/trips/${id}`, icon: Home },
+    { name: 'Itinerary', shortName: '일정', href: `/trips/${id}/itinerary`, icon: CalendarDays },
+    { name: 'Budget', shortName: '예산', href: `/trips/${id}/budget`, icon: Wallet },
+    ...(isOwner ? [{ name: 'Members', shortName: '멤버', href: `/trips/${id}/members`, icon: Users }] : []),
+    { name: 'Gallery', shortName: '갤러리', href: `/trips/${id}/gallery`, icon: ImageIcon },
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f9] flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 sticky top-16 md:top-0 md:h-screen z-40">
-        <div className="hidden md:block p-6 border-b border-slate-200">
-          <Link href="/trips" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors mb-6 group">
-            <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-            홈으로 이동
+    <div className="editorial-page">
+      <div className="editorial-container">
+        <div className="editorial-trip-nav">
+          <Link href="/trips" className="editorial-trip-nav-back editorial-focus inline-flex items-center gap-1">
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            My trips
           </Link>
-          <h2 className="text-xl font-bold text-slate-900">여행 관리</h2>
+          <div className="editorial-trip-nav-meta">
+            <span className="hidden sm:inline">{trip?.destination}</span>
+            <span className="hidden sm:inline"> · </span>
+            <span>{trip?.title}</span>
+          </div>
         </div>
-        
-        <nav className="flex flex-row md:flex-col flex-1 p-2 md:p-4 gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-y-auto whitespace-nowrap no-scrollbar justify-around md:justify-start">
+
+        <nav className="editorial-trip-tabs" aria-label="여행 메뉴">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-            
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
-                title={item.name}
-                className={`flex items-center justify-center md:justify-start px-4 py-3 md:py-3 text-sm rounded-xl transition-all ${
-                  isActive
-                    ? 'text-indigo-600 font-bold'
-                    : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
-                }`}
+                className="editorial-trip-tab editorial-focus"
+                data-active={isActive}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className={`w-5 h-5 md:mr-3 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
-                <span className="hidden md:inline">{item.name}</span>
+                <Icon className="mr-1 inline-block h-3.5 w-3.5 text-[var(--terra)] sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">{item.name}</span>
+                <span className="sm:hidden">{item.shortName}</span>
               </Link>
             );
           })}
         </nav>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 w-full min-w-0 overflow-y-auto">
-        <div className="h-full bg-[#f5f5f9] p-4 md:p-8">
-          <div className="max-w-7xl mx-auto w-full">
-            {sectionLabel && <TripContextHeader sectionLabel={sectionLabel} />}
-            {children}
-          </div>
-        </div>
-      </main>
+        {sectionLabel && <TripContextHeader sectionLabel={sectionLabel} />}
+        <main className="editorial-main !pt-0">{children}</main>
+
+        <footer className="editorial-footer">
+          <span>Pack to Go / {trip?.destination || 'Travel journal'}</span>
+          <span>Shared plans · softer edges</span>
+        </footer>
+      </div>
     </div>
   );
 }
@@ -100,9 +94,7 @@ export default function TripLayout({
 
   return (
     <TripProvider tripId={id}>
-      <TripLayoutContent id={id}>
-        {children}
-      </TripLayoutContent>
+      <TripLayoutContent id={id}>{children}</TripLayoutContent>
     </TripProvider>
   );
 }

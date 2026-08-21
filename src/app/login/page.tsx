@@ -1,15 +1,15 @@
 'use client';
 
-import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { Suspense } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import EditorialImage from '@/components/EditorialImage';
+import { EDITORIAL_HERO_ALT, EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
+import { auth } from '@/lib/firebase';
 
 function LoginContent() {
   const handleGoogleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      // signInWithPopup updates the auth state, which AuthGuard will detect and handle
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (error) {
       console.error('Login error:', error);
       alert('로그인 중 오류가 발생했습니다.');
@@ -17,45 +17,40 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Pack to Go
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
-          세상을 탐험하고, 여정을 공유하세요
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm sm:rounded-2xl sm:px-10 border border-slate-200">
-          <div className="space-y-6">
-            <button
-              onClick={handleGoogleLogin}
-              className="w-full flex justify-center py-3 px-4 border border-slate-300 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Google 계정으로 계속하기
-            </button>
+    <div className="editorial-page">
+      <div className="editorial-login">
+        <section className="editorial-login-image" aria-labelledby="login-visual-title">
+          <EditorialImage
+            src={EDITORIAL_HERO_IMAGE}
+            alt={EDITORIAL_HERO_ALT}
+            sizes="(max-width: 900px) 100vw, 60vw"
+            priority
+            className="h-full w-full object-cover"
+          />
+          <div className="editorial-login-caption">
+            <p className="editorial-kicker !text-[var(--surface)]">A shared travel journal</p>
+            <h1 id="login-visual-title" className="editorial-login-title">여행을<br />기록하는 방식.</h1>
+            <p className="editorial-login-copy">계획부터 사진과 예산까지, 함께 만든 여정의 모든 장면을 한 곳에 남겨보세요.</p>
           </div>
-        </div>
+        </section>
+
+        <section className="editorial-login-panel" aria-labelledby="login-title">
+          <p className="editorial-kicker">Pack to Go / Welcome</p>
+          <h2 id="login-title" className="editorial-login-panel-title">다음 장면을<br />열어보세요.</h2>
+          <p className="mt-5 max-w-[30ch] text-[0.8rem] leading-[1.8] text-[var(--muted)]">
+            여행 기록을 확인하려면 Google 계정으로 계속해 주세요.
+          </p>
+          <button type="button" onClick={handleGoogleLogin} className="editorial-google-button editorial-focus mt-10">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+            </svg>
+            Google 계정으로 계속하기
+          </button>
+          <p className="mt-5 text-[0.62rem] leading-[1.7] text-[var(--muted)]">초대받은 멤버만 여행 기록에 접근할 수 있습니다.</p>
+        </section>
       </div>
     </div>
   );
@@ -63,8 +58,25 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-100">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="editorial-page editorial-main">
+          <div className="editorial-container">
+            <StateFallback />
+          </div>
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
+  );
+}
+
+function StateFallback() {
+  return (
+    <section className="editorial-state-panel" role="status" aria-live="polite">
+      <div className="editorial-state-skeleton" aria-hidden="true"><span /><span /><span /></div>
+      <p className="editorial-state-title">Pack to Go를 여는 중입니다</p>
+    </section>
   );
 }

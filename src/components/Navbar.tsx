@@ -1,16 +1,17 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const isDev = process.env.NODE_ENV === 'development';
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -23,6 +24,7 @@ export default function Navbar() {
       }
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -30,54 +32,56 @@ export default function Navbar() {
     await signOut(auth);
     router.push('/login');
   };
-  
+
+  const isLoginPage = pathname === '/login';
+  const profileLabel = user?.displayName || user?.email?.split('@')[0] || '여행자';
+  const profileInitial = profileLabel.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-xl">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link 
-              href="/" 
-              className="flex items-center gap-3 transition-opacity hover:opacity-80"
-            >
-              <div className="flex flex-col justify-center">
-                <span className="text-2xl font-bold tracking-tight text-indigo-600">
-                  Pack to Go
-                </span>
-                <span className="text-[11px] text-slate-500 font-medium tracking-wide">
-                  세상을 탐험하고, 여정을 공유하세요
-                </span>
-              </div>
+    <header className="editorial-nav">
+      <div className="editorial-container editorial-nav-inner">
+        <Link href="/" className="editorial-brand editorial-focus" aria-label="Pack to Go 홈">
+          <span className="editorial-brand-name">Pack to Go</span>
+          <span className="editorial-brand-note">Travel / Shared / Remembered</span>
+        </Link>
+
+        <div className="editorial-nav-links">
+          {!isLoginPage && (
+            <>
+              <Link
+                href="/trips"
+                className="editorial-nav-link editorial-focus"
+                data-active={pathname === '/trips' || pathname.startsWith('/trips/')}
+              >
+                Travel Journal
+              </Link>
+              <Link
+                href="/trips"
+                className="editorial-nav-link editorial-focus"
+                data-active={pathname === '/trips'}
+              >
+                My Trips
+              </Link>
+            </>
+          )}
+
+          {!loading && user && !isLoginPage && (
+            <div className="editorial-nav-user">
+              <span className="editorial-avatar" aria-hidden="true">
+                {profileInitial}
+              </span>
+              <span>{profileLabel}</span>
+              <button type="button" onClick={handleLogout} className="editorial-nav-action editorial-focus">
+                Log Out
+              </button>
+            </div>
+          )}
+
+          {!loading && !user && !isLoginPage && (
+            <Link href="/login" className="editorial-nav-link editorial-focus">
+              Log In
             </Link>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {!loading && (
-              user ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-                      {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
-                    </div>
-                    <span className="hidden text-sm font-medium text-slate-700 sm:block">
-                      {user.displayName || user.email?.split('@')[0]}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-                  >
-                    로그아웃
-                  </button>
-                </div>
-              ) : (
-                <Link href="/login" className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                  로그인
-                </Link>
-              )
-            )}
-          </div>
+          )}
         </div>
       </div>
     </header>

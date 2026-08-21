@@ -1,132 +1,165 @@
-// @ts-nocheck
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, type UIMessage } from 'ai';
 import { Bot, Send, User, Sparkles, AlertCircle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+function getMessageText(message: UIMessage): string {
+  return message.parts.reduce((text, part) => (part.type === 'text' ? text + part.text : text), '');
+}
 
 export default function GeminiChatWidget({ destination }: { destination: string }) {
   const [input, setInput] = useState('');
-  const { messages, sendMessage, status, error } = useChat({
-    api: '/api/chat',
-    initialMessages: [
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/chat' }), []);
+  const { messages, sendMessage, status, error, clearError } = useChat<UIMessage>({
+    transport,
+    messages: [
       {
         id: '1',
         role: 'assistant',
-        content: `안녕하세요! **${destination}** 여행에 대해 무엇이든 물어보세요. 맛집, 명소, 교통편 등 어떤 것이든 답변해 드릴게요! ✨`
-      }
-    ]
+        parts: [
+          {
+            type: 'text',
+            text: `안녕하세요! **${destination}** 여행에 대해 무엇이든 물어보세요. 맛집, 명소, 교통편 등 어떤 것이든 답변해 드릴게요! ✨`,
+          },
+        ],
+      },
+    ],
   });
-
-  console.log('MESSAGES_DUMP:', JSON.stringify(messages));
-  if(typeof window !== 'undefined') window.MY_CHAT = { messages, sendMessage, status, error }; const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  return (
-    <div className="flex flex-col h-[500px] bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
-      {/* Header */}
-      <div className="flex items-center px-6 py-4 bg-slate-50 border-b border-slate-200">
-        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-          <Sparkles className="w-4 h-4 text-indigo-600" />
-        </div>
-        <div>
-          <h3 className="font-bold text-slate-900">Gemini 여행 비서</h3>
-          <p className="text-xs text-indigo-600">Powered by Google AI</p>
-        </div>
-      </div>
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-      {/* Error Message */}
+    type ChatDebugSnapshot = {
+      messages: UIMessage[];
+      sendMessage: typeof sendMessage;
+      status: typeof status;
+      error: typeof error;
+    };
+
+    const debugWindow = window as Window & { MY_CHAT?: ChatDebugSnapshot };
+    debugWindow.MY_CHAT = { messages, sendMessage, status, error };
+
+    return () => {
+      delete debugWindow.MY_CHAT;
+    };
+  }, [messages, sendMessage, status, error]);
+
+  const isBusy = status === 'submitted' || status === 'streaming';
+  const canSubmit = input.trim().length > 0 && !isBusy;
+
+  const submitMessage = () => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput || !canSubmit) return;
+
+    clearError();
+    void sendMessage({ text: trimmedInput }, { body: { destination } });
+    setInput('');
+  };
+
+  return (
+    <section className="editorial-chat-box" aria-label={`${destination} Gemini 여행 비서`}>
+      <header className="editorial-chat-header">
+        <div className="editorial-chat-identity">
+          <span className="editorial-chat-mark" aria-hidden="true">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="editorial-chat-title">Gemini 여행 비서</h3>
+            <p className="editorial-chat-subtitle">{destination} / shared field guide</p>
+          </div>
+        </div>
+        <span className="editorial-chat-status">Ready to help</span>
+      </header>
+
       {error && (
-        <div className="m-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-200">
-            {error.message.includes('API key') 
-              ? 'Gemini API 키가 설정되지 않았습니다. .env.local 파일에 GEMINI_API_KEY를 추가해주세요.'
-              : '오류가 발생했습니다. 잠시 후 다시 시도해주세요.'}
+        <div className="editorial-chat-error" role="alert">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>
+            {error.message.includes('API key')
+              ? 'Gemini API 키가 설정되지 않았습니다.'
+              : '응답을 가져오지 못했습니다. 다시 시도해주세요.'}
           </p>
+          <button type="button" onClick={clearError} className="editorial-chat-retry editorial-focus">
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.map(m => (
-          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex max-w-[85%] ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                m.role === 'user' 
-                  ? 'bg-blue-100 ml-3' 
-                  : 'bg-indigo-100 mr-3'
-              }`}>
-                {m.role === 'user' ? <User className="w-4 h-4 text-blue-600" /> : <Bot className="w-4 h-4 text-indigo-600" />}
-              </div>
-              <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed border ${
-                m.role === 'user'
-                  ? 'bg-blue-50 text-slate-800 border-blue-100 rounded-tr-sm'
-                  : 'bg-slate-50 text-slate-800 border-slate-200 rounded-tl-sm'
-              }`}>
-                {/* Render text with basic formatting support (newlines to br) */}
-                {(m.content || (m.parts ? m.parts.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('') : '')).split('\n').map((line, i, arr) => (
-                  <span key={i}>
+      <div className="editorial-chat-messages" role="log" aria-live="polite" aria-label="Gemini 대화 내용">
+        {messages.map((message) => {
+          const messageText = getMessageText(message);
+
+          return (
+            <div key={message.id} className="editorial-chat-message" data-role={message.role}>
+              <span className="editorial-chat-avatar" aria-hidden="true">
+                {message.role === 'user' ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+              </span>
+              <div className="editorial-chat-bubble">
+                {messageText.split('\n').map((line, index, lines) => (
+                  <span key={`${message.id}-${index}`}>
                     {line}
-                    {i !== arr.length - 1 && <br />}
+                    {index !== lines.length - 1 && <br />}
                   </span>
                 ))}
               </div>
             </div>
-          </div>
-        ))}
-        {status === 'submitted' || status === 'streaming' ? (
-          <div className="flex justify-start">
-            <div className="flex flex-row max-w-[85%]">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-indigo-100 mr-3">
-                <Bot className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 rounded-tl-sm flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
+          );
+        })}
+
+        {isBusy && (
+          <div className="editorial-chat-message" data-role="assistant" aria-label="Gemini가 답변을 작성하는 중입니다">
+            <span className="editorial-chat-avatar" aria-hidden="true">
+              <Bot className="h-3.5 w-3.5" />
+            </span>
+            <div className="editorial-chat-typing" aria-hidden="true">
+              <span />
+              <span />
+              <span />
             </div>
           </div>
-        ) : null}
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        if (!(input || '').trim() || status === 'submitted' || status === 'streaming' || error != null) return;
-        sendMessage({ role: 'user', content: input }, { data: { destination } });
-        setInput('');
-      }} className="p-4 bg-white border-t border-slate-200">
-        <div className="relative flex items-center">
-          <input
-            value={input || ''}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (!(input || '').trim() || status === 'submitted' || status === 'streaming' || error != null) return;
-                sendMessage({ role: 'user', content: input }, { data: { destination } });
-                setInput('');
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submitMessage();
+        }}
+        className="editorial-chat-composer"
+      >
+        <label htmlFor="gemini-chat-input" className="sr-only">
+          {destination}에 대해 질문하기
+        </label>
+        <div className="editorial-chat-composer-row">
+          <textarea
+            id="gemini-chat-input"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                submitMessage();
               }
             }}
             placeholder={`${destination}에 대해 질문해보세요...`}
-            className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-sm rounded-full pl-5 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 border border-slate-200 transition-all"
-            disabled={status === 'submitted' || status === 'streaming' || error != null}
+            rows={1}
+            className="editorial-chat-input editorial-focus"
+            disabled={isBusy}
           />
-          <button
-            type="submit"
-            disabled={status === 'submitted' || status === 'streaming' || !(input || '').trim() || error != null}
-            className="absolute right-2 p-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-400 disabled:opacity-50 disabled:hover:bg-indigo-500 transition-colors"
-          >
-            <Send className="w-4 h-4" />
+          <button type="submit" disabled={!canSubmit} className="editorial-chat-send editorial-focus" aria-label="메시지 보내기">
+            <Send className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+        <p className="editorial-chat-helper">Enter to send · Shift + Enter for a new line</p>
       </form>
-    </div>
+    </section>
   );
 }

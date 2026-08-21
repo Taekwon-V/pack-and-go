@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
@@ -12,61 +12,83 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isPopupOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsPopupOpen(false);
+      if (event.key === 'ArrowRight') setCurrentIndex((prev) => (prev + 1) % images.length);
+      if (event.key === 'ArrowLeft') setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [images.length, isPopupOpen]);
+
   if (!images || images.length === 0) return null;
 
-  const handleNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handleNext = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
-  const handlePrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handlePrev = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   return (
     <>
-      <div 
-        className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden group cursor-pointer"
-        onClick={() => setIsPopupOpen(true)}
-      >
-        <Image
-          src={images[currentIndex]}
-          alt={`Destination Image ${currentIndex + 1}`}
-          fill
-          className="object-cover transition-opacity duration-500 hover:scale-105"
-        />
-        
-        {/* Overlay gradient for text readability if needed */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="editorial-carousel">
+        <button
+          type="button"
+          className="editorial-carousel-media editorial-focus block w-full border-0 bg-transparent p-0 text-left"
+          onClick={() => setIsPopupOpen(true)}
+          aria-label={`여행 사진 ${currentIndex + 1} 크게 보기`}
+        >
+          <Image
+            src={images[currentIndex]}
+            alt={`오키나와 여행 사진 ${currentIndex + 1}`}
+            fill
+            sizes="(max-width: 640px) 100vw, 80vw"
+            className="object-cover"
+            decoding="async"
+          />
+        </button>
 
         {images.length > 1 && (
           <>
             <button
+              type="button"
               onClick={handlePrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70"
+              className="editorial-carousel-control editorial-focus"
+              data-direction="previous"
+              aria-label="이전 사진"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
-            
             <button
+              type="button"
               onClick={handleNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70"
+              className="editorial-carousel-control editorial-focus"
+              data-direction="next"
+              aria-label="다음 사진"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
-
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-              {images.map((_, idx) => (
+            <div className="editorial-carousel-dots" aria-label="사진 선택">
+              {images.map((image, index) => (
                 <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentIndex(idx);
+                  key={`${image}-${index}`}
+                  type="button"
+                  className="editorial-carousel-dot editorial-focus"
+                  data-active={index === currentIndex}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setCurrentIndex(index);
                   }}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    idx === currentIndex ? 'bg-indigo-500 w-4' : 'bg-white/50 hover:bg-white/80'
-                  }`}
+                  aria-label={`${index + 1}번째 사진 보기`}
+                  aria-pressed={index === currentIndex}
                 />
               ))}
             </div>
@@ -74,46 +96,52 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
         )}
       </div>
 
-      {/* Lightbox Popup */}
       {isPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center animate-in fade-in duration-200">
-          <button 
+        <div className="editorial-lightbox" role="dialog" aria-modal="true" aria-label="여행 사진 크게 보기">
+          <button
+            type="button"
             onClick={() => setIsPopupOpen(false)}
-            className="absolute top-6 right-6 text-white/70 hover:text-white p-2 bg-black/50 rounded-full transition-colors z-50"
+            className="editorial-lightbox-close editorial-focus"
+            aria-label="사진 닫기"
           >
-            <X className="w-8 h-8" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
-          
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh] flex items-center justify-center p-4">
+
+          <div className="editorial-lightbox-media">
             <Image
               src={images[currentIndex]}
-              alt={`Popup Image ${currentIndex + 1}`}
+              alt={`오키나와 여행 사진 ${currentIndex + 1}`}
               fill
+              sizes="100vw"
               className="object-contain"
-              quality={100}
+              quality={75}
             />
-            
+
             {images.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={handlePrev}
-                  className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-white/20 transition-all"
+                  className="editorial-lightbox-arrow editorial-focus"
+                  data-direction="previous"
+                  aria-label="이전 사진"
                 >
-                  <ChevronLeft className="w-8 h-8" />
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
-                
                 <button
+                  type="button"
                   onClick={handleNext}
-                  className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-white/20 transition-all"
+                  className="editorial-lightbox-arrow editorial-focus"
+                  data-direction="next"
+                  aria-label="다음 사진"
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
                 </button>
               </>
             )}
-            
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/80 text-sm bg-black/50 px-4 py-2 rounded-full">
+            <span className="editorial-lightbox-counter" aria-live="polite">
               {currentIndex + 1} / {images.length}
-            </div>
+            </span>
           </div>
         </div>
       )}

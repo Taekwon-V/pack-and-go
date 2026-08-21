@@ -1,15 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, or, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, or, query, where } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { db, auth } from '@/lib/firebase';
+import { CalendarDays, MapPin, Plane, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Plane, Calendar, MapPin } from 'lucide-react';
 import StatePanel from '@/components/StatePanel';
-import { formatTripDateRange, getDaysUntil } from '@/lib/tripFormatters';
+import EditorialImage from '@/components/EditorialImage';
+import { auth, db } from '@/lib/firebase';
+import { formatTripDateRange, getDaysUntil, getProfileLabel } from '@/lib/tripFormatters';
+import { EDITORIAL_HERO_ALT, EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
 import type { UserProfile } from '@/components/trip/types';
 
 interface Trip {
@@ -21,6 +22,39 @@ interface Trip {
   coverImage?: string;
   ownerId?: string;
   collaboratorIds?: string[];
+}
+
+function getTripImage(trip: Trip, index: number) {
+  if (trip.coverImage) return trip.coverImage;
+  if (index === 0) return EDITORIAL_HERO_IMAGE;
+  return ['/gallery/2.png', '/gallery/3.jpg', '/gallery/4.jpg'][index % 3];
+}
+
+function getTripImageAlt(trip: Trip, index: number) {
+  return trip.coverImage ? `${trip.destination} 여행 대표 이미지` : index === 0 ? EDITORIAL_HERO_ALT : `${trip.destination} 여행 사진`;
+}
+
+function TripMetaLine({ trip, userProfiles }: { trip: Trip; userProfiles: Record<string, UserProfile> }) {
+  const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
+  const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
+  const names = uniqueParticipants
+    .slice(0, 3)
+    .map((uid) => getProfileLabel(userProfiles[uid], '멤버'))
+    .join(' · ');
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.68rem] font-bold leading-relaxed text-[var(--muted)]">
+      <span className="inline-flex items-center gap-1.5">
+        <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
+        {trip.destination}
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <CalendarDays className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
+        {formatTripDateRange(trip.startDate, trip.endDate)}
+      </span>
+      {names && <span>{names}{uniqueParticipants.length > 3 ? ` +${uniqueParticipants.length - 3}` : ''}</span>}
+    </div>
+  );
 }
 
 export default function TripsPage() {
@@ -38,8 +72,7 @@ export default function TripsPage() {
     try {
       let isAdmin = isDev;
       if (currentUser) {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
+        const userDocSnap = await getDoc(doc(db, 'users', currentUser.uid));
         const userData = userDocSnap.data();
         isAdmin = isAdmin || userData?.role === 'admin' || currentUser.email === 'inchul17.kim@gmail.com';
       }
@@ -57,10 +90,7 @@ export default function TripsPage() {
           );
 
       const snapshot = await getDocs(tripsQuery);
-      const fetchedTrips = snapshot.docs.map((tripDoc) => ({
-        id: tripDoc.id,
-        ...tripDoc.data(),
-      })) as Trip[];
+      const fetchedTrips = snapshot.docs.map((tripDoc) => ({ id: tripDoc.id, ...tripDoc.data() })) as Trip[];
       setTrips(fetchedTrips);
 
       const uids = new Set<string>();
@@ -74,7 +104,7 @@ export default function TripsPage() {
         Array.from(uids).map(async (uid) => {
           try {
             const userSnapshot = await getDoc(doc(db, 'users', uid));
-            if (userSnapshot.exists()) profiles[uid] = userSnapshot.data();
+            if (userSnapshot.exists()) profiles[uid] = userSnapshot.data() as UserProfile;
           } catch (profileError) {
             console.error('Failed to fetch user profile', uid, profileError);
           }
@@ -104,10 +134,13 @@ export default function TripsPage() {
     return () => unsubscribe();
   }, [fetchTrips, router]);
 
+  const activeTrip = trips[0];
+  const otherTrips = useMemo(() => trips.slice(1), [trips]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f5f5f9] p-8">
-        <div className="mx-auto flex min-h-[28rem] max-w-4xl items-center justify-center">
+      <div className="editorial-page">
+        <div className="editorial-container editorial-main">
           <StatePanel
             variant="loading"
             title="여행 목록을 불러오는 중입니다"
@@ -120,8 +153,8 @@ export default function TripsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#f5f5f9] p-8">
-        <div className="mx-auto flex min-h-[28rem] max-w-4xl items-center justify-center">
+      <div className="editorial-page">
+        <div className="editorial-container editorial-main">
           <StatePanel
             variant="error"
             title="여행 목록을 불러오지 못했습니다"
@@ -135,90 +168,127 @@ export default function TripsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f9] p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col items-center justify-center py-8 mb-8">
-          <Image src="/banner.jpg" alt="Pack to Go 여행 안내 이미지" width={800} height={450} className="w-full object-cover rounded-[2rem] shadow-2xl shadow-indigo-500/10 border border-white/5" priority />
+    <div className="editorial-page">
+      <div className="editorial-container editorial-main">
+        <div className="editorial-rule-label flex items-center justify-between gap-4 py-4">
+          <span><strong>01</strong> / Trip index</span>
+          <span className="hidden sm:inline">Pack to Go / Field notes in progress</span>
         </div>
 
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">내 여행 탐색</h1>
-        </div>
-
-        {trips.length === 0 ? (
-          <StatePanel
-            variant="empty"
-            icon={Plane}
-            title="아직 계획된 여행이 없습니다"
-            description="새로운 여행이 게시되거나 초대되면 여기에 표시됩니다."
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {trips.map(trip => (
-              <Link href={`/trips/${trip.id}`} key={trip.id}>
-                <div className="group relative bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-violet-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-indigo-500/20 text-indigo-500 rounded-2xl flex items-center justify-center shrink-0">
-                        <MapPin className="w-6 h-6" />
-                      </div>
-                      <div className="bg-slate-50 px-3 py-1 rounded-full text-xs font-semibold text-slate-700 shadow-sm border border-slate-200">
-                        D-{getDaysUntil(trip.startDate)}
-                      </div>
-                    </div>
-                    
-                    <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">{trip.title}</h2>
-                    <p className="text-slate-500 font-medium mb-6 flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4" />
-                      {trip.destination}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center text-sm text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <Calendar className="w-4 h-4 mr-2 text-indigo-500" />
-                        {formatTripDateRange(trip.startDate, trip.endDate)}
-                      </div>
-                      
-                      <div className="flex -space-x-2">
-                        {(() => {
-                          const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
-                          const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
-                          const displayUsers = uniqueParticipants.slice(0, 6);
-                          const extraCount = uniqueParticipants.length - 6;
-
-                          return (
-                            <>
-                              {displayUsers.map((uid, i) => {
-                                const profile = userProfiles[uid];
-                                const initial = profile?.displayName?.charAt(0) || profile?.email?.charAt(0) || '?';
-                                return (
-                                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 z-10 relative overflow-hidden shadow-sm" title={profile?.displayName || profile?.email || 'Unknown User'}>
-                                    {profile?.photoURL ? (
-                                      <Image src={profile.photoURL} alt="Profile" fill className="object-cover" sizes="32px" />
-                                    ) : (
-                                      initial.toUpperCase()
-                                    )}
-                                  </div>
-                                );
-                              })}
-                              {extraCount > 0 && (
-                                <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 z-10 shadow-sm" title={`${extraCount} more participants`}>
-                                  +{extraCount}
-                                </div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+        <section className="py-[clamp(3rem,6vw,5rem)]" aria-labelledby="trips-title">
+          <div className="mb-12 flex items-end justify-between gap-6">
+            <div>
+              <p className="editorial-kicker">My trips</p>
+              <h1 id="trips-title" className="editorial-display mt-5 max-w-[13ch] text-[clamp(3rem,6vw,5rem)] leading-[0.96]">
+                다음 여행을,<br />더 선명하게.
+              </h1>
+            </div>
+            <p className="hidden max-w-[16ch] pb-1 text-right text-[0.62rem] font-bold uppercase leading-[1.7] tracking-[0.17em] text-[var(--muted)] md:block">
+              {trips.length ? `${trips.length} active journey${trips.length > 1 ? 's' : ''}` : 'No active journey'}
+              <br />A field note in progress
+            </p>
           </div>
-        )}
+
+          {!activeTrip ? (
+            <StatePanel
+              variant="empty"
+              icon={Plane}
+              title="아직 계획된 여행이 없습니다"
+              description="새로운 여행이 게시되거나 초대되면 이곳에 여행 기록이 시작됩니다."
+            />
+          ) : (
+            <>
+              <div className="editorial-feature-grid">
+                <Link href={`/trips/${activeTrip.id}`} className="editorial-feature-link editorial-focus block min-w-0 no-underline">
+                  <figure className="editorial-feature-figure">
+                    <div className="editorial-feature-media">
+                      <EditorialImage
+                        src={getTripImage(activeTrip, 0)}
+                        alt={getTripImageAlt(activeTrip, 0)}
+                        priority
+                        sizes="(max-width: 900px) 100vw, 66vw"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <figcaption className="editorial-feature-caption">
+                      <h2 className="editorial-feature-title line-clamp-2">{activeTrip.title}</h2>
+                      <span className="editorial-feature-tag">Active journey / 01</span>
+                    </figcaption>
+                  </figure>
+                </Link>
+
+                <aside className="editorial-meta-column" aria-label="현재 여행 정보">
+                  <div className="editorial-meta-heading">
+                    <span>Current journey</span>
+                    <ArrowUpRight className="h-4 w-4 text-[var(--terra)]" aria-hidden="true" />
+                  </div>
+                  <dl className="editorial-meta-list">
+                    <div className="editorial-meta-item">
+                      <dt className="editorial-meta-label"><MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" /> Destination</dt>
+                      <dd className="editorial-meta-value">{activeTrip.destination}</dd>
+                    </div>
+                    <div className="editorial-meta-item">
+                      <dt className="editorial-meta-label"><CalendarDays className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" /> Dates</dt>
+                      <dd className="editorial-meta-value">{formatTripDateRange(activeTrip.startDate, activeTrip.endDate)}</dd>
+                    </div>
+                    <div className="flex items-end justify-between gap-4 border-t border-[var(--rule)] pt-5">
+                      <div className="editorial-meta-item">
+                        <dt className="editorial-meta-label">Members</dt>
+                        <dd className="editorial-meta-value">
+                          {[activeTrip.ownerId, ...(activeTrip.collaboratorIds || [])].filter(Boolean).length}명
+                        </dd>
+                      </div>
+                      <div className="editorial-countdown">D-{getDaysUntil(activeTrip.startDate)}</div>
+                    </div>
+                  </dl>
+                  <p className="mt-12 border-t border-[var(--rule)] pt-4 text-[0.62rem] font-bold tracking-[0.12em] text-[var(--muted)]">
+                    현재 진행 중인 여행 {trips.length}개
+                  </p>
+                </aside>
+              </div>
+
+              {otherTrips.length > 0 && (
+                <section className="mt-20 border-t border-[var(--rule)] pt-6" aria-labelledby="other-trips-title">
+                  <div className="mb-6 flex items-center justify-between gap-4">
+                    <h2 id="other-trips-title" className="editorial-kicker">More field notes</h2>
+                    <span className="text-[0.62rem] font-bold text-[var(--muted)]">{otherTrips.length} records</span>
+                  </div>
+                  <div className="divide-y divide-[var(--rule)] border-y border-[var(--rule)]">
+                    {otherTrips.map((trip, index) => (
+                      <Link
+                        key={trip.id}
+                        href={`/trips/${trip.id}`}
+                        className="editorial-focus group grid gap-5 py-5 no-underline sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:items-center"
+                      >
+                        <div className="relative h-28 overflow-hidden bg-[var(--sand)] sm:h-20">
+                          <EditorialImage
+                            src={getTripImage(trip, index + 1)}
+                            alt={getTripImageAlt(trip, index + 1)}
+                            sizes="(max-width: 640px) 100vw, 8rem"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="editorial-display truncate text-[1.4rem] leading-tight group-hover:text-[var(--terra)]">{trip.title}</h3>
+                          <div className="mt-3"><TripMetaLine trip={trip} userProfiles={userProfiles} /></div>
+                        </div>
+                        <span className="inline-flex items-center gap-2 text-[0.62rem] font-extrabold uppercase tracking-[0.13em] text-[var(--terra)]">
+                          D-{getDaysUntil(trip.startDate)}
+                          <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+        </section>
+
+        <footer className="editorial-footer">
+          <span>Pack to Go / Travel journal</span>
+          <span>Shared plans · softer edges</span>
+        </footer>
       </div>
     </div>
   );

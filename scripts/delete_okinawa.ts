@@ -1,5 +1,4 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, deleteDoc } from 'firebase/firestore';
 
 // Need a simple config here or reuse existing
 import { db } from '../src/lib/firebase';
