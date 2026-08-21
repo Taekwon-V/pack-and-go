@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, doc, getDoc, getDocs, or, query, where } from 'firebase/firestore';
@@ -159,9 +160,15 @@ export default function TripsPage() {
           <div className="mb-[clamp(2.25rem,5vw,4rem)] grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.7fr)] md:items-end">
             <div>
               <p className="editorial-kicker">My trips</p>
-              <h1 id="trips-title" className="editorial-trips-hero-title" aria-label="다음 여행을, 더 선명하게.">
-                <span aria-hidden="true">다음 여행을,</span>
-                <span aria-hidden="true">더 선명하게.</span>
+              <h1 id="trips-title" className="editorial-trips-hero-title">
+                <Image
+                  src="/calligraphy-title.jpg"
+                  alt="다음 여행을, 더 선명하게."
+                  width={640}
+                  height={427}
+                  priority
+                  className="editorial-trips-calligraphy-img"
+                />
               </h1>
             </div>
             <dl className="editorial-trip-summary" aria-label="여행 상태 요약">
