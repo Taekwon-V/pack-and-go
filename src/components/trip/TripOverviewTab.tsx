@@ -57,12 +57,37 @@ const GERMANY_HIGHLIGHTS: Array<{ title: string; description: string; icon: Luci
   },
 ];
 
+const PHU_QUOC_HIGHLIGHTS: Array<{ title: string; description: string; icon: LucideIcon }> = [
+  {
+    title: '세계 최장 해상 케이블카',
+    description: '에메랄드빛 바다 위를 날아 혼똔섬으로 향하는 7.9km 세계 최장 해상 케이블카와 아쿠아토피아 워터파크.',
+    icon: Compass,
+  },
+  {
+    title: '황금빛 롱비치 선셋 & 비치 바',
+    description: '베트남에서 가장 아름다운 일몰을 자랑하는 롱비치 해변과 이국적인 선셋 칵테일 바.',
+    icon: MapPin,
+  },
+  {
+    title: '활기 넘치는 즈엉동 야시장',
+    description: '갓 잡은 신선한 랍스터와 가리비 해산물 바비큐, 땅콩과 반미 등 풍성한 베트남 스트리트 푸드.',
+    icon: Users,
+  },
+  {
+    title: '아시아 최대 오픈 사파리',
+    description: '자연 그대로의 숲에서 자유롭게 노니는 야생 동물들과 기린 레스토랑에서의 특별한 교감.',
+    icon: Compass,
+  },
+];
+
 export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOverviewTabProps) {
   const gallery = trip.gallery && trip.gallery.length > 0 ? trip.gallery : EDITORIAL_GALLERY;
   const highlights = trip.destination.includes('오키나와')
     ? OKINAWA_HIGHLIGHTS
     : trip.destination.includes('독일') || trip.destination.toLowerCase().includes('germany')
     ? GERMANY_HIGHLIGHTS
+    : trip.destination.includes('푸꾸옥') || trip.destination.toLowerCase().includes('phu quoc')
+    ? PHU_QUOC_HIGHLIGHTS
     : OKINAWA_HIGHLIGHTS.slice(0, 3);
 
   return (
