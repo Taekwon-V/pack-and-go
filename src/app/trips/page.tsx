@@ -162,10 +162,10 @@ export default function TripsPage() {
               <p className="editorial-kicker">My trips</p>
               <h1 id="trips-title" className="editorial-trips-hero-title">
                 <Image
-                  src="/calligraphy-title.jpg"
+                  src="/calligraphy-title.png"
                   alt="다음 여행을, 더 선명하게."
-                  width={640}
-                  height={427}
+                  width={1154}
+                  height={662}
                   priority
                   className="editorial-trips-calligraphy-img"
                 />

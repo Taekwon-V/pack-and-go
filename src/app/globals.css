@@ -574,18 +574,17 @@
     display: flex;
     max-width: 100%;
     align-items: flex-start;
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
   }
 
   .editorial-trips-calligraphy-img {
     display: block;
-    width: clamp(16rem, 38vw, 24rem);
+    width: clamp(18rem, 44vw, 30rem);
     height: auto;
     object-fit: contain;
-    mix-blend-mode: multiply;
     pointer-events: none;
     user-select: none;
-    margin-left: -0.75rem;
+    margin-left: -0.25rem;
   }
 
   .editorial-overview-media {
