@@ -926,11 +926,13 @@
 
   .editorial-day-tabs {
     display: flex;
-    gap: 1.6rem;
+    align-items: center;
+    gap: 0;
     overflow-x: auto;
     border-bottom: 1px solid var(--rule);
-    padding-block: 0.9rem;
+    padding-block: 0.85rem;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .editorial-day-tabs::-webkit-scrollbar {
@@ -948,8 +950,24 @@
     font-weight: 800;
     letter-spacing: 0.1em;
     padding-block: 0.2rem;
-    text-align: left;
+    padding-inline: 1.25rem;
+    text-align: center;
     text-transform: uppercase;
+  }
+
+  .editorial-day-tab:first-child {
+    padding-left: 0.5rem;
+  }
+
+  .editorial-day-tab + .editorial-day-tab::before {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 1.1rem;
+    width: 1px;
+    background: var(--rule);
+    content: '';
   }
 
   .editorial-day-tab span {
@@ -957,16 +975,16 @@
   }
 
   .editorial-day-tab span:first-child {
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.25rem;
     color: var(--muted);
     font-size: 0.6rem;
   }
 
   .editorial-day-tab::after {
     position: absolute;
-    right: 0;
-    bottom: -0.95rem;
-    left: 0;
+    right: 15%;
+    bottom: -0.85rem;
+    left: 15%;
     height: 2px;
     background: var(--terra);
     content: '';
@@ -2375,6 +2393,39 @@
   .editorial-trip-tab[data-active='true']::after {
     opacity: 1;
     transform: scaleX(1);
+  }
+
+  .editorial-day-tabs {
+    padding-block: 0.65rem;
+    gap: 0;
+  }
+
+  .editorial-day-tab {
+    flex: 1 0 auto;
+    min-width: 4.6rem;
+    padding-inline: 0.6rem;
+    padding-block: 0.15rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+
+  .editorial-day-tab:first-child {
+    padding-left: 0.6rem;
+  }
+
+  .editorial-day-tab span:first-child {
+    margin-bottom: 0.15rem;
+    font-size: 0.54rem;
+  }
+
+  .editorial-day-tab + .editorial-day-tab::before {
+    height: 1rem;
+  }
+
+  .editorial-day-tab::after {
+    bottom: -0.65rem;
+    left: 12%;
+    right: 12%;
   }
 
   .editorial-trip-nav,
