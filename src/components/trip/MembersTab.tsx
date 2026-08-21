@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { arrayRemove, arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, collection, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { Crown, Loader2, Mail, Plus, ShieldCheck, UserX, Users } from 'lucide-react';
 import Image from 'next/image';
 import { db } from '@/lib/firebase';
@@ -25,6 +25,18 @@ export default function MembersTab({
   const [addLoading, setAddLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const participantsUids = [trip.ownerId, ...(trip.collaboratorIds || [])];
+  const uniqueUids = Array.from(new Set(participantsUids)).filter(Boolean) as string[];
+  const rawCollaboratorEmails = trip.collaboratorEmails || [];
+
+  // Filter out any emails that already belong to a joined member
+  const pendingEmails = rawCollaboratorEmails.filter(
+    (email) =>
+      !uniqueUids.some(
+        (uid) => userProfiles[uid]?.email?.toLowerCase().trim() === email.toLowerCase().trim(),
+      ),
+  );
+
   const handleAddMember = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!emailInput.trim()) return;
@@ -33,12 +45,32 @@ export default function MembersTab({
     setAddLoading(true);
     try {
       const email = emailInput.trim().toLowerCase();
-      if (trip.collaboratorEmails?.includes(email)) {
-        setErrorMsg('이미 참여 중인 이메일입니다.');
+
+      // Check if already in trip (by email in collaboratorEmails or in userProfiles)
+      const isAlreadyInTrip =
+        rawCollaboratorEmails.some((e) => e.toLowerCase() === email) ||
+        uniqueUids.some((uid) => userProfiles[uid]?.email?.toLowerCase() === email);
+
+      if (isAlreadyInTrip) {
+        setErrorMsg('이미 여행 멤버이거나 초대가 완료된 이메일입니다.');
         return;
       }
 
-      await updateDoc(doc(db, 'trips', trip.id), { collaboratorEmails: arrayUnion(email) });
+      // Check if user already registered in the app
+      const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+      const usersSnap = await getDocs(usersQuery);
+
+      const updates: { collaboratorEmails: ReturnType<typeof arrayUnion>; collaboratorIds?: ReturnType<typeof arrayUnion> } = {
+        collaboratorEmails: arrayUnion(email),
+      };
+
+      if (!usersSnap.empty) {
+        // User already has an account! Add directly to collaboratorIds for instant membership!
+        const existingUid = usersSnap.docs[0].id;
+        updates.collaboratorIds = arrayUnion(existingUid);
+      }
+
+      await updateDoc(doc(db, 'trips', trip.id), updates);
       await setDoc(doc(db, 'allowed_emails', email), { addedAt: new Date(), source: 'trip_invite' }, { merge: true });
       setEmailInput('');
       onUpdate();
@@ -53,7 +85,15 @@ export default function MembersTab({
   const handleRemoveEmail = async (email: string) => {
     if (!confirm(`${email} 님을 여행에서 제외하시겠습니까?`)) return;
     try {
-      await updateDoc(doc(db, 'trips', trip.id), { collaboratorEmails: arrayRemove(email) });
+      const emailLower = email.toLowerCase().trim();
+      const matchedUid = uniqueUids.find((uid) => userProfiles[uid]?.email?.toLowerCase().trim() === emailLower);
+      const updates: Record<string, ReturnType<typeof arrayRemove>> = {
+        collaboratorEmails: arrayRemove(email),
+      };
+      if (matchedUid && matchedUid !== trip.ownerId) {
+        updates.collaboratorIds = arrayRemove(matchedUid);
+      }
+      await updateDoc(doc(db, 'trips', trip.id), updates);
       onUpdate();
     } catch (error) {
       console.error(error);
@@ -64,17 +104,20 @@ export default function MembersTab({
   const handleRemoveMember = async (uid: string) => {
     if (!confirm('이 멤버를 여행에서 제외하시겠습니까?')) return;
     try {
-      await updateDoc(doc(db, 'trips', trip.id), { collaboratorIds: arrayRemove(uid) });
+      const email = userProfiles[uid]?.email;
+      const updates: Record<string, ReturnType<typeof arrayRemove>> = {
+        collaboratorIds: arrayRemove(uid),
+      };
+      if (email) {
+        updates.collaboratorEmails = arrayRemove(email);
+      }
+      await updateDoc(doc(db, 'trips', trip.id), updates);
       onUpdate();
     } catch (error) {
       console.error(error);
       alert('멤버 삭제 중 오류가 발생했습니다.');
     }
   };
-
-  const participantsUids = [trip.ownerId, ...(trip.collaboratorIds || [])];
-  const uniqueUids = Array.from(new Set(participantsUids)).filter(Boolean) as string[];
-  const collaboratorEmails = trip.collaboratorEmails || [];
 
   return (
     <section className="editorial-section !pt-0" aria-labelledby="members-title">
@@ -86,7 +129,7 @@ export default function MembersTab({
           </h2>
         </div>
         <span className="hidden text-right text-[0.62rem] font-bold uppercase tracking-[0.15em] text-[var(--muted)] sm:block">
-          {uniqueUids.length + collaboratorEmails.length} travellers<br />Shared access / invite
+          {uniqueUids.length + pendingEmails.length} travellers<br />Shared access / invite
         </span>
       </div>
 
@@ -136,9 +179,7 @@ export default function MembersTab({
             );
           })}
 
-          {collaboratorEmails.map((email) => {
-            const alreadyRendered = uniqueUids.some((uid) => userProfiles[uid]?.email === email);
-            if (alreadyRendered) return null;
+          {pendingEmails.map((email) => {
             return (
               <div key={email} className="editorial-member-row">
                 <div className="editorial-member-identity">

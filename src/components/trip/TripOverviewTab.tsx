@@ -140,7 +140,9 @@ export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOv
             />
             <div className="mt-7 border-t border-[var(--rule)] pt-4 text-[0.68rem] font-bold text-[var(--muted)]">
               <span className="text-[var(--olive)]">TRAVELLING WITH</span>
-              <span className="ml-3">멤버 {trip.collaboratorIds?.length ? trip.collaboratorIds.length + 1 : 1}명</span>
+              <span className="ml-3">
+                멤버 {Array.from(new Set([trip.ownerId, ...(trip.collaboratorIds || [])])).filter(Boolean).length || 1}명
+              </span>
             </div>
           </aside>
         </div>

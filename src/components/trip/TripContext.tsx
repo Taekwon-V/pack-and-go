@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import StatePanel from '@/components/StatePanel';
 import type { TripContextValue, TripLoadState, TripRecord, UserProfile } from './types';
@@ -38,7 +38,6 @@ export function TripProvider({ tripId, children }: { tripId: string; children: R
       }
 
       const fetchedTrip = { id: docSnap.id, ...docSnap.data() } as TripRecord;
-      setTrip(fetchedTrip);
 
       const uids = new Set<string>();
       if (fetchedTrip.ownerId) uids.add(fetchedTrip.ownerId);
@@ -55,6 +54,52 @@ export function TripProvider({ tripId, children }: { tripId: string; children: R
           }
         }),
       );
+
+      // Check if any collaboratorEmails match registered users and auto-promote to collaboratorIds
+      const missingUids: string[] = [];
+      if (fetchedTrip.collaboratorEmails && fetchedTrip.collaboratorEmails.length > 0) {
+        await Promise.all(
+          fetchedTrip.collaboratorEmails.map(async (email) => {
+            const normalizedEmail = email.toLowerCase().trim();
+            const isAlreadyLoaded = Object.values(profiles).some(
+              (p) => p.email?.toLowerCase().trim() === normalizedEmail,
+            );
+            if (!isAlreadyLoaded) {
+              try {
+                const userSnap = await getDocs(
+                  query(collection(db, 'users'), where('email', '==', normalizedEmail)),
+                );
+                if (!userSnap.empty) {
+                  const docFound = userSnap.docs[0];
+                  profiles[docFound.id] = docFound.data() as UserProfile;
+                  uids.add(docFound.id);
+                  if (!fetchedTrip.collaboratorIds?.includes(docFound.id)) {
+                    missingUids.push(docFound.id);
+                  }
+                }
+              } catch (err) {
+                console.error('Failed to resolve email user profile', email, err);
+              }
+            }
+          }),
+        );
+      }
+
+      // Auto-sync missing collaboratorIds in Firestore
+      if (missingUids.length > 0) {
+        try {
+          await updateDoc(docRef, {
+            collaboratorIds: arrayUnion(...missingUids),
+          });
+          fetchedTrip.collaboratorIds = Array.from(
+            new Set([...(fetchedTrip.collaboratorIds || []), ...missingUids]),
+          );
+        } catch (syncErr) {
+          console.error('Auto-sync collaboratorIds failed:', syncErr);
+        }
+      }
+
+      setTrip(fetchedTrip);
       setUserProfiles(profiles);
       setState('ready');
     } catch (fetchError) {

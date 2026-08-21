@@ -17,7 +17,9 @@ export default function TripHeader() {
   const imageAlt = trip.coverImage ? `${trip.destination} 여행 대표 이미지` : `${trip.destination} 대표 풍경`;
 
   const participants = [trip.ownerId, ...(trip.collaboratorIds || [])];
-  const uniqueParticipants = Array.from(new Set(participants)).filter(Boolean) as string[];
+  const uniqueParticipants = Array.from(
+    new Set([...participants.filter(Boolean), ...Object.keys(userProfiles)]),
+  ) as string[];
   const memberNames = uniqueParticipants.length
     ? uniqueParticipants
         .slice(0, 3)

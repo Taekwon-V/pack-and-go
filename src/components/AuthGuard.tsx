@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
+import { arrayUnion, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -45,7 +46,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         let isApproved = email === 'inchul17.kim@gmail.com';
 
         if (!isApproved) {
-          const { doc, getDoc, collection, query, where, getDocs, setDoc } = await import('firebase/firestore');
           const allowedDoc = await getDoc(doc(db, 'allowed_emails', email));
 
           if (allowedDoc.exists()) {
@@ -68,7 +68,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
 
         if (isApproved) {
-          const { doc, getDoc, setDoc } = await import('firebase/firestore');
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
 
@@ -83,6 +82,24 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             });
           } else if (userSnap.data().status !== 'approved') {
             await setDoc(userRef, { status: 'approved' }, { merge: true });
+          }
+
+          // Auto-sync user.uid into collaboratorIds for any trips invited by email
+          try {
+            const tripsQuery = query(collection(db, 'trips'), where('collaboratorEmails', 'array-contains', email));
+            const tripsSnap = await getDocs(tripsQuery);
+            if (!tripsSnap.empty) {
+              for (const tripDoc of tripsSnap.docs) {
+                const tripData = tripDoc.data();
+                if (!tripData.collaboratorIds?.includes(user.uid)) {
+                  await updateDoc(tripDoc.ref, {
+                    collaboratorIds: arrayUnion(user.uid),
+                  });
+                }
+              }
+            }
+          } catch (syncError) {
+            console.error('Error auto-syncing trip collaboratorIds on login:', syncError);
           }
 
           if (pathname === '/login') {
