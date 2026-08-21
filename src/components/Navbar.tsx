@@ -35,6 +35,23 @@ export default function Navbar() {
       <div className="editorial-container editorial-nav-inner">
         <Link href="/" className="editorial-brand editorial-focus" aria-label="Pack to Go 홈">
           <span className="editorial-brand-name">Pack to Go</span>
+          <svg
+            className="editorial-brand-badge"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9.5" strokeDasharray="2 2" opacity="0.75" />
+            <path d="M12 18V8" strokeWidth="1.5" />
+            <path d="M12 8c-2-2-4-1-6 0 1.5 2 3.5 1.5 6 0z" fill="currentColor" fillOpacity="0.25" />
+            <path d="M12 8c2-2 4-1 6 0-1.5 2-3.5 1.5-6 0z" fill="currentColor" fillOpacity="0.25" />
+            <path d="M12 11c-1.5-1.5-3-0.5-4.5 0.5 1 1.5 2.5 1 4.5-0.5z" fill="currentColor" fillOpacity="0.2" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+          </svg>
           <span className="editorial-brand-note">Travel / Shared / Remembered</span>
         </Link>
 
@@ -44,12 +61,12 @@ export default function Navbar() {
               <span className="editorial-avatar" aria-hidden="true">
                 {profileInitial}
               </span>
-              <span className="text-[var(--ink)]">{profileLabel}</span>
-              <span className="mx-1.5 h-3.5 w-px bg-[var(--rule)]" aria-hidden="true" />
+              <span className="editorial-nav-username">{profileLabel}</span>
+              <span className="editorial-nav-divider" aria-hidden="true" />
               <button
                 type="button"
                 onClick={handleLogout}
-                className="editorial-nav-action editorial-focus transition-colors hover:text-[var(--terra)]"
+                className="editorial-nav-action editorial-focus"
               >
                 Log Out
               </button>

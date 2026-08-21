@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
-import { Montserrat, Noto_Sans_KR, Noto_Serif_KR, Playfair_Display, Yeon_Sung } from 'next/font/google';
+import { Caveat, Montserrat, Noto_Sans_KR, Noto_Serif_KR, Playfair_Display, Yeon_Sung } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import AuthGuard from '@/components/AuthGuard';
+
+const caveat = Caveat({
+  variable: '--font-script',
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  display: 'swap',
+});
 
 const montserrat = Montserrat({
   variable: '--font-montserrat',
@@ -48,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${montserrat.variable} ${notoSans.variable} ${notoSerif.variable} ${playfair.variable} ${yeonSung.variable} antialiased h-full`}
+      className={`${caveat.variable} ${montserrat.variable} ${notoSans.variable} ${notoSerif.variable} ${playfair.variable} ${yeonSung.variable} antialiased h-full`}
     >
       <body className="editorial-body min-h-[100dvh]">
         <AuthGuard>

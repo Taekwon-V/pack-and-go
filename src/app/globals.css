@@ -15,6 +15,7 @@
   --soft-terra: #f4e8e3;
   --font-editorial-display: var(--font-playfair), var(--font-noto-serif-kr), Georgia, 'Times New Roman', serif;
   --font-editorial-calligraphy: var(--font-yeon-sung), var(--font-noto-serif-kr), cursive;
+  --font-editorial-script: var(--font-script), 'Caveat', 'Brush Script MT', cursive;
   --font-editorial-body: var(--font-noto-sans-kr), var(--font-montserrat), Arial, Helvetica, sans-serif;
   --font-editorial-mono: var(--font-montserrat), 'Courier New', monospace;
 }
@@ -98,28 +99,42 @@
   .editorial-brand {
     display: inline-flex;
     min-width: 0;
-    flex-direction: column;
-    gap: 0.2rem;
+    align-items: center;
+    gap: 0.45rem;
     color: #faf7f2;
     text-decoration: none;
   }
 
   .editorial-brand-name {
-    font-family: var(--font-editorial-display);
-    font-size: 1.35rem;
-    font-weight: 600;
-    letter-spacing: -0.05em;
+    font-family: var(--font-editorial-script);
+    font-size: 2.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
     line-height: 1;
-    color: #faf7f2;
+    color: #fefae0;
+    transform: rotate(-1.5deg);
+    display: inline-block;
+    padding-bottom: 0.15rem;
+  }
+
+  .editorial-brand-badge {
+    width: 1.4rem;
+    height: 1.4rem;
+    color: #d4dcbf;
+    flex-shrink: 0;
+    margin-left: -0.1rem;
+    margin-top: -0.15rem;
   }
 
   .editorial-brand-note {
     color: #b8c49e;
-    font-size: 0.56rem;
-    font-weight: 700;
+    font-size: 0.58rem;
+    font-weight: 800;
     letter-spacing: 0.16em;
     line-height: 1;
     text-transform: uppercase;
+    white-space: nowrap;
+    margin-left: 0.35rem;
   }
 
   .editorial-nav-links {
@@ -135,11 +150,11 @@
     position: relative;
     border: 0;
     background: transparent;
-    color: #c9d4b4;
+    color: #f4e2bd;
     cursor: pointer;
-    font-size: 0.62rem;
+    font-size: 0.66rem;
     font-weight: 800;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     line-height: 1.25;
     text-decoration: none;
     text-transform: uppercase;
@@ -173,24 +188,29 @@
   .editorial-nav-user {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    color: #e2e8d8;
-    font-size: 0.72rem;
-    font-weight: 700;
+    gap: 0.65rem;
   }
 
-  .editorial-nav-user span.text-\[var\(--ink\)\] {
+  .editorial-nav-username {
     color: #faf7f2;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
   }
 
-  .editorial-nav-user span[aria-hidden='true'].bg-\[var\(--rule\)\] {
-    background: #475a2d;
+  .editorial-nav-divider {
+    display: inline-block;
+    width: 1px;
+    height: 0.95rem;
+    background: rgba(255, 255, 255, 0.35);
+    margin-inline: 0.15rem;
   }
 
   .editorial-avatar {
     display: inline-flex;
-    width: 2rem;
-    height: 2rem;
+    width: 2.1rem;
+    height: 2.1rem;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -198,7 +218,7 @@
     border-radius: 999px;
     background: #3a4b24;
     color: #fefae0;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 800;
   }
 
@@ -2373,35 +2393,47 @@
   }
 
   .editorial-nav-inner {
-    min-height: 4rem;
-  }
-
-  .editorial-nav-links {
-    gap: 0.75rem;
-  }
-
-  .editorial-nav-link,
-  .editorial-nav-action {
-    font-size: 0.52rem;
-    letter-spacing: 0.1em;
-  }
-
-  .editorial-nav-user span {
-    display: none;
-  }
-
-  .editorial-nav-inner {
     min-height: 3.25rem;
   }
 
-  .editorial-avatar {
-    width: 1.65rem;
-    height: 1.65rem;
-    font-size: 0.65rem;
+  .editorial-nav-links {
+    gap: 0.5rem;
   }
 
   .editorial-brand-name {
-    font-size: 1.15rem;
+    font-size: 1.65rem;
+  }
+
+  .editorial-brand-badge {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  .editorial-brand-note {
+    display: none;
+  }
+
+  .editorial-nav-username {
+    max-width: 6.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+  }
+
+  .editorial-nav-action {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+
+  .editorial-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.68rem;
+  }
+
+  .editorial-brand-note {
+    display: none;
   }
 
   .editorial-brand-note {
