@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ExternalLink, MapPin } from 'lucide-react';
-
-type MapState = 'loading' | 'loaded' | 'error';
 
 interface DestinationMapProps {
   title: string;
@@ -18,12 +16,9 @@ export default function DestinationMap({
   embedUrl,
   externalUrl,
 }: DestinationMapProps) {
-  const [hasError, setHasError] = useState(!embedUrl);
+  const [failedEmbedUrl, setFailedEmbedUrl] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    setHasError(!embedUrl);
-  }, [embedUrl]);
+  const hasError = !embedUrl || failedEmbedUrl === embedUrl;
 
   return (
     <div className="editorial-map-frame" aria-label={`${title} 지도`}>
@@ -34,7 +29,7 @@ export default function DestinationMap({
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           onLoad={() => setIsLoaded(true)}
-          onError={() => setHasError(true)}
+          onError={() => setFailedEmbedUrl(embedUrl)}
         />
       ) : (
         <div className="editorial-map-fallback" role="status">

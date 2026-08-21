@@ -9,8 +9,8 @@ export interface TripStatusSectionDefinition {
 }
 
 export const TRIP_STATUS_SECTIONS: readonly TripStatusSectionDefinition[] = [
-  { status: 'planned', label: '예정', englishLabel: 'Planned', emptyCopy: '아직 예정된 여행이 없습니다.' },
   { status: 'in-progress', label: '여행 중', englishLabel: 'In progress', emptyCopy: '현재 여행 중인 기록이 없습니다.' },
+  { status: 'planned', label: '예정', englishLabel: 'Planned', emptyCopy: '아직 예정된 여행이 없습니다.' },
   { status: 'completed', label: '완료', englishLabel: 'Completed', emptyCopy: '완료된 여행 기록이 없습니다.' },
 ];
 

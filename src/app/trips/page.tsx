@@ -107,6 +107,11 @@ export default function TripsPage() {
     return groups;
   }, [trips]);
 
+  const activeStatusSections = useMemo(
+    () => TRIP_STATUS_SECTIONS.filter(({ status }) => groupedTrips[status].length > 0),
+    [groupedTrips],
+  );
+
   const imageIndexByTripId = useMemo(
     () => new Map(trips.map((trip, index) => [trip.id, index])),
     [trips],
@@ -151,11 +156,12 @@ export default function TripsPage() {
         </div>
 
         <section className="py-[clamp(3rem,6vw,5rem)]" aria-labelledby="trips-title">
-          <div className="mb-16 grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.7fr)] md:items-end">
+          <div className="mb-[clamp(2.25rem,5vw,4rem)] grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.7fr)] md:items-end">
             <div>
               <p className="editorial-kicker">My trips</p>
-              <h1 id="trips-title" className="editorial-display mt-5 max-w-[13ch] text-[clamp(3rem,6vw,5rem)] leading-[0.96]">
-                다음 여행을,<br />더 선명하게.
+              <h1 id="trips-title" className="editorial-trips-hero-title" aria-label="다음 여행을, 더 선명하게.">
+                <span aria-hidden="true">다음 여행을,</span>
+                <span aria-hidden="true">더 선명하게.</span>
               </h1>
             </div>
             <dl className="editorial-trip-summary" aria-label="여행 상태 요약">
@@ -163,7 +169,7 @@ export default function TripsPage() {
                 <dt>All journeys</dt>
                 <dd>{trips.length}</dd>
               </div>
-              {TRIP_STATUS_SECTIONS.map((section) => (
+              {activeStatusSections.map((section) => (
                 <div key={section.status} data-status={section.status}>
                   <dt>{section.label}</dt>
                   <dd>{groupedTrips[section.status].length}</dd>
@@ -181,7 +187,7 @@ export default function TripsPage() {
             />
           ) : (
             <div className="editorial-trip-status-list">
-              {TRIP_STATUS_SECTIONS.map((section) => {
+              {activeStatusSections.map((section) => {
                 const sectionTrips = groupedTrips[section.status];
                 const headingId = `trip-status-${section.status}`;
 
@@ -204,22 +210,18 @@ export default function TripsPage() {
                       </span>
                     </div>
 
-                    {sectionTrips.length ? (
-                      <div className="editorial-trip-card-grid">
-                        {sectionTrips.map((trip, index) => (
-                          <TripCard
-                            key={trip.id}
-                            trip={trip}
-                            status={section.status}
-                            imageIndex={imageIndexByTripId.get(trip.id) ?? index}
-                            noteIndex={index}
-                            userProfiles={userProfiles}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="editorial-trip-card-empty">{section.emptyCopy}</p>
-                    )}
+                    <div className="editorial-trip-card-grid">
+                      {sectionTrips.map((trip, index) => (
+                        <TripCard
+                          key={trip.id}
+                          trip={trip}
+                          status={section.status}
+                          imageIndex={imageIndexByTripId.get(trip.id) ?? index}
+                          noteIndex={index}
+                          userProfiles={userProfiles}
+                        />
+                      ))}
+                    </div>
                   </section>
                 );
               })}

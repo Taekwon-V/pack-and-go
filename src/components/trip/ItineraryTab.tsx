@@ -146,47 +146,54 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
               <article key={`${currentDayData.id}-${index}`} className="editorial-timeline-entry">
                 <span className="editorial-timeline-node" aria-hidden="true" />
                 <div className="editorial-timeline-header">
-                  <button
-                    type="button"
-                    className="editorial-timeline-header-main editorial-focus"
-                    onClick={() => toggleItem(index)}
-                    aria-expanded={isExpanded}
-                    aria-controls={detailsId}
-                  >
+                  <div className="editorial-timeline-header-main">
                     <span className="editorial-timeline-time">
                       <Clock3 className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
                       {activity.time}
                     </span>
-                    <span>
-                      <span className="editorial-timeline-title block">{activity.title}</span>
-                      <span className="editorial-timeline-location">
-                        <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
-                        {activity.location}
-                      </span>
-                    </span>
-                  </button>
-
-                  <div className="editorial-timeline-actions">
                     <button
                       type="button"
-                      onClick={() => openGoogleMaps(activity.mapQuery || activity.location)}
-                      className="editorial-timeline-map-btn editorial-focus"
-                      title={`${activity.location} Google 지도에서 보기`}
-                      aria-label={`${activity.location} Google 지도에서 보기`}
-                    >
-                      <Map className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
+                      className="editorial-timeline-title-toggle editorial-focus"
                       onClick={() => toggleItem(index)}
-                      className="editorial-timeline-toggle editorial-focus"
                       aria-expanded={isExpanded}
                       aria-controls={detailsId}
-                      title={isExpanded ? '상세 접기' : '상세 펼치기'}
-                      aria-label={isExpanded ? '상세 접기' : '상세 펼치기'}
                     >
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      <span className="editorial-timeline-title block">{activity.title}</span>
                     </button>
+                    <div className="editorial-timeline-location-row">
+                      <span className="editorial-timeline-location">
+                        <MapPin className="h-3.5 w-3.5 text-[var(--terra)]" aria-hidden="true" />
+                        <span>{activity.location}</span>
+                      </span>
+                      <div className="editorial-timeline-actions">
+                        <button
+                          type="button"
+                          onClick={() => openGoogleMaps(activity.mapQuery || activity.location)}
+                          className="editorial-timeline-map-btn editorial-focus"
+                          title={`${activity.location} Google 지도에서 보기`}
+                          aria-label={`${activity.location} Google 지도에서 보기`}
+                        >
+                          <Map className="h-4 w-4" aria-hidden="true" />
+                          <span>지도</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleItem(index)}
+                          className="editorial-timeline-toggle editorial-focus"
+                          aria-expanded={isExpanded}
+                          aria-controls={detailsId}
+                          title={isExpanded ? '상세 접기' : '상세 펼치기'}
+                          aria-label={isExpanded ? '상세 접기' : '상세 펼치기'}
+                        >
+                          <span>{isExpanded ? '세부 메모 접기' : '세부 메모 보기'}</span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

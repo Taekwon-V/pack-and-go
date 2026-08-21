@@ -63,7 +63,6 @@ export default function TripCard({ trip, status, imageIndex, noteIndex, userProf
             <span className="editorial-trip-card-status-mark" aria-hidden="true" />
             {status === 'planned' ? '예정' : status === 'in-progress' ? '여행 중' : '완료'}
           </span>
-          <ArrowUpRight className="editorial-trip-card-arrow h-4 w-4" aria-hidden="true" />
         </div>
 
         <h2 className="editorial-trip-card-title">{trip.title || '제목 없는 여행'}</h2>
@@ -85,7 +84,10 @@ export default function TripCard({ trip, status, imageIndex, noteIndex, userProf
 
         <div className="editorial-trip-card-footer">
           <span>{formatTripStatusMeta(status, trip.startDate)}</span>
-          <span>View journal</span>
+          <span className="editorial-trip-card-cta">
+            여행 상세 보기
+            <ArrowUpRight className="editorial-trip-card-arrow h-4 w-4" aria-hidden="true" />
+          </span>
         </div>
       </div>
     </Link>

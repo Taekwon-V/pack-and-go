@@ -14,6 +14,7 @@
   --soft-olive: #edf0e7;
   --soft-terra: #f4e8e3;
   --font-editorial-display: var(--font-playfair), var(--font-noto-serif-kr), Georgia, 'Times New Roman', serif;
+  --font-editorial-calligraphy: var(--font-yeon-sung), var(--font-noto-serif-kr), cursive;
   --font-editorial-body: var(--font-noto-sans-kr), var(--font-montserrat), Arial, Helvetica, sans-serif;
   --font-editorial-mono: var(--font-montserrat), 'Courier New', monospace;
 }
@@ -555,6 +556,42 @@
     padding-bottom: 1rem;
   }
 
+  .editorial-trips-hero-title {
+    display: flex;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 1.25rem;
+    color: var(--ink);
+    font-family: var(--font-editorial-calligraphy);
+    font-size: clamp(2.8rem, 8vw, 4.4rem);
+    font-weight: 400;
+    letter-spacing: -0.06em;
+    line-height: 0.98;
+    transform: rotate(-1deg);
+    transform-origin: left center;
+  }
+
+  .editorial-trips-hero-title span {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .editorial-trips-hero-title span + span {
+    margin-left: 0.55em;
+    color: var(--olive);
+  }
+
+  .editorial-trips-hero-title::after {
+    width: 5.5rem;
+    height: 2px;
+    margin: 0.55rem 0 0 3.8rem;
+    background: var(--terra);
+    content: '';
+    opacity: 0.7;
+    transform: rotate(-4deg);
+  }
+
   .editorial-overview-media {
     position: relative;
     height: clamp(19rem, 38vw, 27.5rem);
@@ -1034,10 +1071,6 @@
   }
 
   .editorial-timeline-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
     width: 100%;
   }
 
@@ -1045,8 +1078,24 @@
     display: grid;
     grid-template-columns: 7.5rem minmax(0, 1fr);
     align-items: start;
-    gap: 1rem;
-    flex: 1;
+    gap: 0 1rem;
+    min-width: 0;
+  }
+
+  .editorial-timeline-time {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    color: var(--olive);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    line-height: 1.55;
+    text-transform: uppercase;
+  }
+
+  .editorial-timeline-title-toggle {
+    display: block;
+    grid-column: 2;
     min-width: 0;
     border: 0;
     background: transparent;
@@ -1056,15 +1105,6 @@
     text-align: left;
   }
 
-  .editorial-timeline-time {
-    color: var(--olive);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    line-height: 1.55;
-    text-transform: uppercase;
-  }
-
   .editorial-timeline-title {
     font-family: var(--font-editorial-display);
     font-size: clamp(1.15rem, 2vw, 1.55rem);
@@ -1072,60 +1112,64 @@
     line-height: 1.2;
   }
 
+  .editorial-timeline-location-row {
+    display: flex;
+    grid-column: 2;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.45rem;
+  }
+
   .editorial-timeline-location {
     display: inline-flex;
+    min-width: 0;
+    flex: 1 1 auto;
     align-items: center;
     gap: 0.25rem;
-    margin-top: 0.45rem;
+    margin-top: 0;
     color: var(--muted);
     font-size: 0.68rem;
     line-height: 1.5;
   }
 
+  .editorial-timeline-location > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .editorial-timeline-actions {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
-    gap: 0.5rem;
-    padding-top: 0.15rem;
-    flex-shrink: 0;
+    gap: 0.35rem;
   }
 
-  .editorial-timeline-map-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: 9999px;
-    border: 1px solid var(--rule);
-    background: var(--paper);
-    color: var(--olive);
-    cursor: pointer;
-    transition: all 180ms ease;
-  }
-
-  .editorial-timeline-map-btn:hover {
-    color: var(--terra);
-    border-color: var(--terra);
-    background: var(--soft-terra);
-    transform: translateY(-1px);
-  }
-
+  .editorial-timeline-map-btn,
   .editorial-timeline-toggle {
     display: inline-flex;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    gap: 0.3rem;
     border: 0;
     background: transparent;
-    color: var(--muted);
+    color: var(--terra);
     cursor: pointer;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.2;
+    padding: 0.25rem;
     transition: color 180ms ease, transform 180ms ease;
+    white-space: nowrap;
   }
 
+  .editorial-timeline-map-btn:hover,
   .editorial-timeline-toggle:hover {
-    color: var(--terra);
+    color: var(--olive);
     transform: translateY(-1px);
   }
 
@@ -1941,7 +1985,7 @@
 
   .editorial-trip-summary {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
   }
@@ -1956,12 +2000,15 @@
   }
 
   .editorial-trip-summary dt {
+    overflow: hidden;
     color: var(--muted);
     font-size: 0.56rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     line-height: 1.4;
+    text-overflow: ellipsis;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .editorial-trip-summary dd {
@@ -2215,6 +2262,14 @@
     color: var(--terra);
   }
 
+  .editorial-trip-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--terra);
+    white-space: nowrap;
+  }
+
   .editorial-trip-card[data-status='planned'] .editorial-trip-card-footer span:first-child {
     color: var(--olive);
   }
@@ -2266,7 +2321,7 @@
   }
 
   .editorial-trip-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   }
 
   .editorial-meta-column,
@@ -2430,10 +2485,14 @@
 
   .editorial-trip-nav,
   .editorial-context-header,
-  .editorial-section-heading,
-  .editorial-trip-status-heading {
+  .editorial-section-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .editorial-trip-status-heading {
+    align-items: flex-end;
+    flex-direction: row;
   }
 
   .editorial-trip-card-body {
@@ -2442,14 +2501,6 @@
 
   .editorial-trip-summary > div {
     padding-inline: 0.6rem;
-  }
-
-  .editorial-trip-summary > div:nth-child(odd) {
-    border-left: 0;
-  }
-
-  .editorial-trip-summary > div:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
   }
 
   .editorial-trip-nav-meta,
@@ -2496,10 +2547,28 @@
 
   .editorial-timeline-header-main {
     grid-template-columns: minmax(0, 1fr);
+    gap: 0;
   }
 
-  .editorial-timeline-time {
-    grid-column: 1 / -1;
+  .editorial-timeline-time,
+  .editorial-timeline-title-toggle,
+  .editorial-timeline-location-row {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .editorial-timeline-location-row {
+    gap: 0.5rem;
+  }
+
+  .editorial-timeline-actions {
+    gap: 0.15rem;
+  }
+
+  .editorial-timeline-map-btn,
+  .editorial-timeline-toggle {
+    font-size: 0.58rem;
+    padding-inline: 0.15rem;
   }
 
   .editorial-timeline-detail {
