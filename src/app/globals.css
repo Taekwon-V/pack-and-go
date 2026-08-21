@@ -333,11 +333,16 @@
   }
 
   .editorial-trip-tabs {
+    position: sticky;
+    top: 4.5rem;
+    z-index: 30;
     display: flex;
     align-items: center;
     gap: clamp(0.75rem, 2.5vw, 2.5rem);
     overflow-x: auto;
     border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--paper) 96%, transparent);
+    backdrop-filter: blur(14px);
     padding-block: 0.85rem;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -362,7 +367,7 @@
   .editorial-trip-tab::after {
     position: absolute;
     right: 0;
-    bottom: -0.92rem;
+    bottom: -0.85rem;
     left: 0;
     height: 2px;
     background: var(--terra);
@@ -2295,12 +2300,38 @@
     display: none;
   }
 
+  .editorial-nav-inner {
+    min-height: 3.25rem;
+  }
+
+  .editorial-avatar {
+    width: 1.65rem;
+    height: 1.65rem;
+    font-size: 0.65rem;
+  }
+
   .editorial-brand-name {
     font-size: 1.15rem;
   }
 
   .editorial-brand-note {
     font-size: 0.48rem;
+  }
+
+  .editorial-trip-tabs {
+    top: 3.25rem;
+    padding-block: 0.55rem;
+    gap: clamp(0.6rem, 2vw, 1.2rem);
+  }
+
+  .editorial-trip-tab {
+    font-size: 0.62rem;
+    letter-spacing: 0.09em;
+    padding-block: 0.15rem;
+  }
+
+  .editorial-trip-tab::after {
+    bottom: -0.55rem;
   }
 
   .editorial-trip-nav,
