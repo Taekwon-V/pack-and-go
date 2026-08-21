@@ -24,11 +24,11 @@ function TripLayoutContent({ children, id }: { children: React.ReactNode; id: st
 
   const isOwner = trip?.ownerId === user?.uid;
   const navItems = [
-    { name: 'Overview', href: `/trips/${id}` },
-    { name: 'Itinerary', href: `/trips/${id}/itinerary` },
-    { name: 'Budget', href: `/trips/${id}/budget` },
-    { name: 'Gallery', href: `/trips/${id}/gallery` },
-    ...(isOwner ? [{ name: 'Members', href: `/trips/${id}/members` }] : []),
+    { name: '개요', href: `/trips/${id}` },
+    { name: '일정', href: `/trips/${id}/itinerary` },
+    { name: '예산', href: `/trips/${id}/budget` },
+    { name: '갤러리', href: `/trips/${id}/gallery` },
+    ...(isOwner ? [{ name: '멤버', href: `/trips/${id}/members` }] : []),
   ];
 
   return (
