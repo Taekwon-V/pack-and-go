@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -34,24 +35,14 @@ export default function Navbar() {
     <header className="editorial-nav">
       <div className="editorial-container editorial-nav-inner">
         <Link href="/" className="editorial-brand editorial-focus" aria-label="Pack to Go 홈">
-          <span className="editorial-brand-name">Pack to Go</span>
-          <svg
-            className="editorial-brand-badge"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="9.5" strokeDasharray="2 2" opacity="0.75" />
-            <path d="M12 18V8" strokeWidth="1.5" />
-            <path d="M12 8c-2-2-4-1-6 0 1.5 2 3.5 1.5 6 0z" fill="currentColor" fillOpacity="0.25" />
-            <path d="M12 8c2-2 4-1 6 0-1.5 2-3.5 1.5-6 0z" fill="currentColor" fillOpacity="0.25" />
-            <path d="M12 11c-1.5-1.5-3-0.5-4.5 0.5 1 1.5 2.5 1 4.5-0.5z" fill="currentColor" fillOpacity="0.2" />
-            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-          </svg>
+          <Image
+            src="/pack-to-go-logo.png"
+            alt="Pack to Go"
+            width={587}
+            height={185}
+            priority
+            className="editorial-brand-logo-img"
+          />
           <span className="editorial-brand-note">Travel / Shared / Remembered</span>
         </Link>
 
