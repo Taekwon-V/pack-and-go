@@ -574,12 +574,12 @@
     display: flex;
     max-width: 100%;
     align-items: flex-start;
-    margin-top: 0.35rem;
+    margin-top: 0.5rem;
   }
 
   .editorial-trips-calligraphy-img {
     display: block;
-    width: clamp(18rem, 44vw, 30rem);
+    width: clamp(20rem, 48vw, 34rem);
     height: auto;
     object-fit: contain;
     pointer-events: none;

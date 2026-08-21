@@ -164,8 +164,8 @@ export default function TripsPage() {
                 <Image
                   src="/calligraphy-title.png"
                   alt="다음 여행을, 더 선명하게."
-                  width={1154}
-                  height={662}
+                  width={1264}
+                  height={837}
                   priority
                   className="editorial-trips-calligraphy-img"
                 />
