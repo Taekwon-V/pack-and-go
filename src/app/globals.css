@@ -355,14 +355,21 @@
 
   .editorial-trip-tab {
     position: relative;
+    display: inline-flex;
+    min-height: 2.75rem;
     flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--muted);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.13em;
-    padding-block: 0.25rem;
+    padding: 0.55rem 0.45rem 0.4rem;
     text-decoration: none;
     text-transform: uppercase;
+    transition: background-color 180ms ease, color 180ms ease;
   }
 
   .editorial-trip-tab::after {
@@ -370,7 +377,7 @@
     right: 0;
     bottom: -0.85rem;
     left: 0;
-    height: 2px;
+    height: 3px;
     background: var(--terra);
     content: '';
     opacity: 0;
@@ -378,10 +385,17 @@
     transition: opacity 180ms ease, transform 180ms ease;
   }
 
-  .editorial-trip-tab:hover,
-  .editorial-trip-tab[data-active='true'] {
-    color: var(--ink);
+  .editorial-trip-tab:hover {
+    background: color-mix(in srgb, var(--soft-terra) 62%, transparent);
+    color: var(--terra);
   }
+
+  .editorial-trip-tab[data-active='true'] {
+    background: var(--soft-terra);
+    color: var(--terra);
+    font-weight: 900;
+  }
+
 
   .editorial-trip-tab[data-active='true']::after {
     opacity: 1;
@@ -1030,12 +1044,23 @@
     transition: opacity 180ms ease, transform 180ms ease;
   }
 
-  .editorial-day-tab:hover,
+  .editorial-day-tab:hover {
+    color: var(--terra);
+  }
+
   .editorial-day-tab[data-active='true'] {
+    background: color-mix(in srgb, var(--soft-terra) 48%, transparent);
     color: var(--ink);
+    font-weight: 900;
+  }
+
+  .editorial-day-tab[data-active='true'] span:first-child {
+    color: var(--terra);
+    font-weight: 900;
   }
 
   .editorial-day-tab[data-active='true']::after {
+    height: 3px;
     opacity: 1;
     transform: scaleX(1);
   }
@@ -2437,7 +2462,7 @@
     bottom: -0.6rem;
     left: 12%;
     right: 12%;
-    height: 2px;
+    height: 3px;
     background: var(--terra);
     content: '';
     opacity: 0;

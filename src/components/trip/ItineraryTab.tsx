@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { CalendarDays, ChevronDown, ChevronUp, Clock3, Map, MapPin } from 'lucide-react';
 import { db } from '@/lib/firebase';
@@ -29,6 +29,7 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
+  const dayTabRefs = useRef<Record<number, HTMLButtonElement | null>>({});
 
   const fetchItineraries = useCallback(async () => {
     setLoading(true);
@@ -59,6 +60,20 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchItineraries();
   }, [fetchItineraries]);
+
+  const handleDayTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, dayIndex: number) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+
+    event.preventDefault();
+    const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? itineraries.length - 1 : dayIndex + direction;
+    const nextDay = itineraries[(nextIndex + itineraries.length) % itineraries.length];
+
+    if (!nextDay) return;
+
+    setSelectedDay(nextDay.dayNumber);
+    dayTabRefs.current[nextDay.dayNumber]?.focus();
+  };
 
   const toggleItem = (index: number) => {
     setExpandedItems((previous) => ({ ...previous, [index]: !previous[index] }));
@@ -112,22 +127,31 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
         </span>
       </div>
 
-      <div className="editorial-day-tabs" aria-label="여행 날짜 선택">
-        {itineraries.map((day) => {
+      <div className="editorial-day-tabs" role="tablist" aria-label="여행 날짜 선택" aria-orientation="horizontal">
+        {itineraries.map((day, dayIndex) => {
           const date = toDate(day.date);
           const dateString = date
             ? date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
             : '날짜 미정';
           const isSelected = selectedDay === day.dayNumber;
+          const panelId = `itinerary-day-panel-${day.id}`;
 
           return (
             <button
               key={day.id}
+              ref={(element) => {
+                dayTabRefs.current[day.dayNumber] = element;
+              }}
               type="button"
+              id={`itinerary-day-tab-${day.id}`}
+              role="tab"
               className="editorial-day-tab editorial-focus"
               data-active={isSelected}
               onClick={() => setSelectedDay(day.dayNumber)}
-              aria-pressed={isSelected}
+              onKeyDown={(event) => handleDayTabKeyDown(event, dayIndex)}
+              aria-selected={isSelected}
+              aria-controls={isSelected ? panelId : undefined}
+              tabIndex={isSelected ? 0 : -1}
             >
               <span>{dateString}</span>
               <span>Day {String(day.dayNumber).padStart(2, '0')}</span>
@@ -137,7 +161,12 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
       </div>
 
       {currentDayData && currentDayData.activities.length > 0 ? (
-        <div className="editorial-timeline">
+        <div
+          id={`itinerary-day-panel-${currentDayData.id}`}
+          role="tabpanel"
+          aria-labelledby={`itinerary-day-tab-${currentDayData.id}`}
+          className="editorial-timeline"
+        >
           {currentDayData.activities.map((activity, index) => {
             const isExpanded = expandedItems[index];
             const detailsId = `activity-details-${currentDayData.id}-${index}`;
@@ -217,7 +246,12 @@ export default function ItineraryTab({ tripId }: { tripId: string }) {
           })}
         </div>
       ) : (
-        <div className="editorial-state-panel mt-5">
+        <div
+          id={currentDayData ? `itinerary-day-panel-${currentDayData.id}` : undefined}
+          role={currentDayData ? 'tabpanel' : undefined}
+          aria-labelledby={currentDayData ? `itinerary-day-tab-${currentDayData.id}` : undefined}
+          className="editorial-state-panel mt-5"
+        >
           <p className="editorial-state-title">해당 일자의 일정이 없습니다</p>
           <p className="editorial-state-copy">다른 날짜를 선택해 여행의 다음 장면을 확인해보세요.</p>
         </div>

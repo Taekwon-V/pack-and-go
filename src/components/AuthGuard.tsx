@@ -23,6 +23,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        const tokenResult = await user.getIdTokenResult();
+        const isPreviewUser =
+          process.env.NODE_ENV === 'development' &&
+          process.env.NEXT_PUBLIC_ENABLE_PREVIEW_AUTH === 'true' &&
+          tokenResult.claims.preview === true;
+
+        if (isPreviewUser) {
+          setAuthorized(true);
+          if (pathname === '/login') router.push('/');
+          return;
+        }
+
         const email = user.email;
         if (!email) {
           await auth.signOut();

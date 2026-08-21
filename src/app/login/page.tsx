@@ -1,10 +1,13 @@
 'use client';
 
 import { Suspense } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCustomToken, signInWithPopup } from 'firebase/auth';
 import EditorialImage from '@/components/EditorialImage';
 import { EDITORIAL_HERO_ALT, EDITORIAL_HERO_IMAGE } from '@/lib/editorialAssets';
 import { auth } from '@/lib/firebase';
+
+const previewAuthEnabled = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_ENABLE_PREVIEW_AUTH === 'true';
+
 function LoginContent() {
   const handleGoogleLogin = async () => {
     try {
@@ -22,6 +25,22 @@ function LoginContent() {
         return;
       }
       alert(`로그인 중 오류가 발생했습니다: ${err.code || err.message || '알 수 없는 오류'}`);
+    }
+  };
+
+  const handlePreviewLogin = async () => {
+    try {
+      const response = await fetch('/api/preview-auth', { method: 'POST' });
+      const payload = (await response.json()) as { token?: string; error?: string };
+
+      if (!response.ok || !payload.token) {
+        throw new Error(payload.error || '개발 미리보기 인증을 준비하지 못했습니다.');
+      }
+
+      await signInWithCustomToken(auth, payload.token);
+    } catch (error: unknown) {
+      console.error('Preview login error:', error);
+      alert(error instanceof Error ? error.message : '개발 미리보기 인증에 실패했습니다.');
     }
   };
 
@@ -58,6 +77,20 @@ function LoginContent() {
             </svg>
             Google 계정으로 계속하기
           </button>
+          {previewAuthEnabled && (
+            <div className="mt-5 border-t border-[var(--rule)] pt-5">
+              <button
+                type="button"
+                onClick={handlePreviewLogin}
+                className="editorial-button editorial-focus w-full"
+              >
+                로컬 미리보기로 열기
+              </button>
+              <p className="mt-3 text-center text-[0.6rem] leading-[1.7] text-[var(--muted)]">
+                개발 환경에서만 표시되는 테스트 로그인입니다.
+              </p>
+            </div>
+          )}
           <p className="mt-5 text-[0.62rem] leading-[1.7] text-[var(--muted)]">초대받은 멤버만 여행 기록에 접근할 수 있습니다.</p>
         </section>
       </div>

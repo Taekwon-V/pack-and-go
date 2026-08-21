@@ -22,7 +22,13 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID="..."
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="....firebasestorage.app"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
 NEXT_PUBLIC_FIREBASE_APP_ID="..."
+
+# 로컬 UI 검증이 필요할 때만 활성화
+ENABLE_PREVIEW_AUTH="true"
+NEXT_PUBLIC_ENABLE_PREVIEW_AUTH="true"
 ```
+
+개발 미리보기 인증은 `NODE_ENV=development`와 localhost에서만 동작합니다. 일반 Google 로그인 대신 `로컬 미리보기로 열기`를 선택하면 Firebase Custom Token으로 실제 인증 세션을 만들고 여행 데이터를 확인할 수 있습니다. 운영 빌드에서는 해당 API와 버튼이 비활성화됩니다.
 
 2. **개발 서버 실행**:
 ```bash
