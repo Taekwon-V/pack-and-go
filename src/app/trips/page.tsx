@@ -157,15 +157,15 @@ export default function TripsPage() {
         </div>
 
         <section className="py-[clamp(3rem,6vw,5rem)]" aria-labelledby="trips-title">
-          <div className="mb-[clamp(2.25rem,5vw,4rem)] grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(19rem,0.7fr)] md:items-end">
+          <div className="mb-[clamp(2.25rem,5vw,4rem)] grid gap-8 md:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)] md:items-end">
             <div>
               <p className="editorial-kicker">My trips</p>
               <h1 id="trips-title" className="editorial-trips-hero-title">
                 <Image
                   src="/calligraphy-title.png"
                   alt="다음 여행을, 더 선명하게."
-                  width={1264}
-                  height={837}
+                  width={969}
+                  height={476}
                   priority
                   className="editorial-trips-calligraphy-img"
                 />
