@@ -57,6 +57,19 @@ export default function RootLayout({
       lang="ko"
       className={`${caveat.variable} ${montserrat.variable} ${notoSans.variable} ${notoSerif.variable} ${playfair.variable} ${yeonSung.variable} antialiased h-full`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (/KAKAOTALK/i.test(navigator.userAgent)) {
+                  location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="editorial-body min-h-[100dvh]">
         <AuthGuard>
           <Navbar />
