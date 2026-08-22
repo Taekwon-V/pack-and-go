@@ -41,7 +41,7 @@ async function seedOkinawa40s() {
   console.log(`Seeding revised trip: ${tripId}...`);
 
   await adminDb.collection('trips').doc(tripId).set({
-    title: '40대의 마지막 오키나와',
+    title: '푸른 바람 부는 오키나와에서',
     destination: '오키나와 (나하 & 차탄)',
     startDate: new Date('2027-09-17T09:00:00Z'),
     endDate: new Date('2027-09-20T18:00:00Z'),
