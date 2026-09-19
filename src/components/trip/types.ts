@@ -2,6 +2,12 @@ export type TripLoadState = 'loading' | 'ready' | 'not-found' | 'error';
 
 export type TripStatus = 'planned' | 'in-progress' | 'completed';
 
+export interface TripHighlight {
+  title: string;
+  description: string;
+  icon?: string;
+}
+
 export interface TripRecord {
   id: string;
   title: string;
@@ -18,6 +24,7 @@ export interface TripRecord {
   clothingDesc?: string;
   gallery?: string[];
   concept?: string;
+  highlights?: TripHighlight[];
   [key: string]: unknown;
 }
 

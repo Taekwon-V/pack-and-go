@@ -82,13 +82,37 @@ const PHU_QUOC_HIGHLIGHTS: Array<{ title: string; description: string; icon: Luc
 
 export default function TripOverviewTab({ trip, mapUrl, externalMapUrl }: TripOverviewTabProps) {
   const gallery = trip.gallery && trip.gallery.length > 0 ? trip.gallery : EDITORIAL_GALLERY;
-  const highlights = trip.destination.includes('오키나와')
+  const defaultIcons: LucideIcon[] = [Compass, MapPin, Users, Compass];
+
+  const highlights = (trip.highlights && trip.highlights.length > 0)
+    ? trip.highlights.map((h, index) => ({
+        title: h.title,
+        description: h.description,
+        icon: defaultIcons[index % defaultIcons.length],
+      }))
+    : trip.destination.includes('오키나와')
     ? OKINAWA_HIGHLIGHTS
     : trip.destination.includes('독일') || trip.destination.toLowerCase().includes('germany')
     ? GERMANY_HIGHLIGHTS
     : trip.destination.includes('푸꾸옥') || trip.destination.toLowerCase().includes('phu quoc')
     ? PHU_QUOC_HIGHLIGHTS
-    : OKINAWA_HIGHLIGHTS.slice(0, 3);
+    : [
+        {
+          title: '다채로운 미식과 정취',
+          description: `${trip.destination}만의 특색 있는 요리와 로컬 맛집을 여유롭게 탐방합니다.`,
+          icon: Compass,
+        },
+        {
+          title: '자연과 명소 탐방',
+          description: '푸른 풍경과 대표 랜드마크를 따라 여유롭게 산책하며 힐링하는 시간.',
+          icon: MapPin,
+        },
+        {
+          title: '편안한 휴식과 호캉스',
+          description: '엄선된 숙소에서 피로를 풀고 가족과 함께 소중한 추억을 나눕니다.',
+          icon: Users,
+        },
+      ];
 
   return (
     <div>
