@@ -45,6 +45,7 @@ Generate the four core markdown documents following the templates in `trips/_tem
 
 ### 1. `01_Requirements.md`
 - **General Info**: Title, Dates, Travelers, Destination.
+  - **⚠️ Title Length Rule**: 여행명은 모바일 및 웹 카드 UI에서 말줄임표(`...`)로 잘리지 않도록 **20~25자 내외**로 간결하고 임팩트 있게 작성 (예: "남도의 자연과 맛, 부모님과 순천·여수 힐링 미식 여행").
 - **Concept & Themes**: 3 core thematic pillars (e.g., Onsen & Relax, Gourmet, Winter Landscape).
 - **Core Requirements**: Accommodations (room count, star rating), Transportation (private van / rental car / transit), Dining, Pacing.
 - **Destination Highlights**: 3~4 distinct, bespoke highlights tailored specifically to the destination and travel group (DO NOT use generic or copy-pasted place descriptions).
@@ -83,9 +84,9 @@ Generate the four core markdown documents following the templates in `trips/_tem
    - `dailyPlans`: Array of days matching `02_Itinerary_Plan.md`.
    - `budgetData`: Total budget and individual expense items matching `03_Budget_Cost.md`.
 3. Set `ownerEmail = 'inchul17.kim@gmail.com'`.
-4. Include standard collaborators:
-   `collaboratorIds: ['u9O6lfsHMFgPLrxj5kKYxDBdqdq1', 'L2WJiaWOYPTo3B0N5ZmcvErzkwd2']`
-   `collaboratorEmails: ['mybest1725@gmail.com', 'j789945661@gmail.com']`
+4. **Member / Collaborator Management Rules**:
+   - **New Trips**: 디폴트 멤버는 오직 관리자(Owner) 본인만 지정 (`collaboratorIds: []`, `collaboratorEmails: []`). 협업자는 사용자가 앱에서 직접 필요할 때 추가함.
+   - **Update / Re-seed Trips**: 기존 여행 문서가 이미 존재할 경우, 이미 등록된 멤버(`collaboratorIds`, `collaboratorEmails`)를 절대 덮어쓰거나 초기화하지 않고 **기존 멤버 데이터를 그대로 유지(Preserve)**할 것.
 
 ---
 

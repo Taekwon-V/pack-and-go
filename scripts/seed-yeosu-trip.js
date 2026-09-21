@@ -42,13 +42,13 @@ async function seedYeosuTrip() {
 
   // 1. Trips collection document
   await adminDb.collection('trips').doc(tripId).set({
-    title: '남도의 자연과 맛, 70대 부모님과 함께하는 순천·여수 힐링 미식 여행',
+    title: '남도의 자연과 맛, 부모님과 순천·여수 힐링 미식 여행',
     destination: '전라남도 순천시 & 여수시 (순천만, 웅천, 이순신광장, 오동도)',
     startDate: new Date('2026-09-24T09:00:00Z'),
     endDate: new Date('2026-09-25T18:00:00Z'),
     ownerId: ownerId,
-    collaboratorIds: ['u9O6lfsHMFgPLrxj5kKYxDBdqdq1', 'L2WJiaWOYPTo3B0N5ZmcvErzkwd2'],
-    collaboratorEmails: ['mybest1725@gmail.com', 'j789945661@gmail.com'],
+    collaboratorIds: [],
+    collaboratorEmails: [],
     concept: '70대 부모님을 모시는 순천만국가정원과 갈대밭 힐링 산책, 여수 이순신광장 핫플 스트리트 투어와 벨메르 오션뷰 호캉스',
     destinationDesc: '순천만의 광활한 갈대밭과 대한민국 1호 국가정원의 초록빛 자연, 그리고 푸른 바다와 화려한 야경이 펼쳐지는 해양 관광도시 여수입니다. 이동과 주차 피로를 줄인 스마트한 동선과 함께 정갈한 꼬막정식, 이순신광장 명물 먹거리, 남도 한정식의 깊은 맛을 선사합니다.',
     weatherDesc: '9월 하순 청명한 초가을 날씨 (평균 20~25℃). 쾌청하고 시원한 가을 바닷바람',
