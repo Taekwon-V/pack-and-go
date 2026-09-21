@@ -42,15 +42,15 @@ async function seedYeosuTrip() {
 
   // 1. Trips collection document
   await adminDb.collection('trips').doc(tripId).set({
-    title: '남도의 맛과 푸른 바다, 70대 부모님과 함께하는 여수 힐링 미식 여행',
-    destination: '전라남도 여수시 (웅천, 돌산, 오동도)',
+    title: '남도의 자연과 맛, 70대 부모님과 함께하는 순천·여수 힐링 미식 여행',
+    destination: '전라남도 순천시 & 여수시 (순천만, 웅천, 이순신광장, 오동도)',
     startDate: new Date('2026-09-24T09:00:00Z'),
     endDate: new Date('2026-09-25T18:00:00Z'),
     ownerId: ownerId,
     collaboratorIds: ['u9O6lfsHMFgPLrxj5kKYxDBdqdq1', 'L2WJiaWOYPTo3B0N5ZmcvErzkwd2'],
     collaboratorEmails: ['mybest1725@gmail.com', 'j789945661@gmail.com'],
-    concept: '70대 부모님을 모시는 안심 힐링 코스, 여수 제철 하모 샤브샤브와 게장 정식, 벨메르 오션뷰 호캉스',
-    destinationDesc: '남도의 푸른 바다와 다도해 섬들이 한눈에 펼쳐지는 아름다운 해양 관광도시 여수입니다. 웅천 마리나의 이국적인 정취, 여수 밤바다와 돌산대교의 낭만적인 야경, 그리고 싱싱한 해산물과 정갈한 남도 손맛이 가득합니다.',
+    concept: '70대 부모님을 모시는 순천만국가정원과 갈대밭 힐링 산책, 여수 이순신광장 핫플 스트리트 투어와 벨메르 오션뷰 호캉스',
+    destinationDesc: '순천만의 광활한 갈대밭과 대한민국 1호 국가정원의 초록빛 자연, 그리고 푸른 바다와 화려한 야경이 펼쳐지는 해양 관광도시 여수입니다. 이동과 주차 피로를 줄인 스마트한 동선과 함께 정갈한 꼬막정식, 이순신광장 명물 먹거리, 남도 한정식의 깊은 맛을 선사합니다.',
     weatherDesc: '9월 하순 청명한 초가을 날씨 (평균 20~25℃). 쾌청하고 시원한 가을 바닷바람',
     clothingDesc: '부모님을 위한 편안한 운동화, 낮 동안의 가벼운 옷차림과 아침/저녁 바닷바람 대비용 가디건 또는 바람막이',
     mapQuery: 'Yeosu, South Korea',
@@ -62,20 +62,20 @@ async function seedYeosuTrip() {
     ],
     highlights: [
       {
-        title: '남도 맛의 수도, 명품 게장과 제철 하모 샤브샤브',
-        description: '알이 꽉 찬 꽃돌게장, 갈치조림과 9월 제철 영양 만점 갯장어(하모) 샤브샤브로 즐기는 여수 최고의 미식 성지.'
+        title: '대한민국 1호 순천만국가정원과 순천만 갈대밭',
+        description: '선선한 아침 관람차로 둘러보는 국가정원과 평지 데크길로 걷는 순천만습지 황금 갈대숲 (원티켓 통합 관람).'
       },
       {
-        title: '낭만 가득한 여수 밤바다와 돌산대교 야경',
-        description: '오색 찬란한 조명이 수놓는 돌산대교와 해안선, 잔잔한 파도 소리와 함께 차 안에서 즐기는 환상적인 야경 드라이브.'
+        title: '남도 꼬막정식 & 이순신광장 핫플 먹거리 투어',
+        description: '알찬 꼬막 한상차림과 이순신광장 7대 명물 먹거리(바다김밥, 구봉만두, 서녹씨 등)를 2인 1조 분업으로 신속 포장하여 즐기는 바다 벤치 만찬.'
       },
       {
-        title: '웅천 마리나와 프리미엄 오션뷰 호캉스',
-        description: '호텔 벨메르 슈페리어 스위트에서 마주하는 탁 트인 남해 전망과 바다 조망 통창 사우나에서 누리는 여유로운 온천 휴식.'
+        title: '여수 빅오 해상분수쇼와 하멜등대 밤바다 야경',
+        description: '여수 밤바다 위에서 펼쳐지는 화려한 조명·음악 분수쇼와 거북선대교 불빛을 택시로 편안하게 즐기는 야경 투어.'
       },
       {
-        title: '푸른 바다 위 오동도 동백 숲길 산책',
-        description: '걷지 않고 편안하게 동백열차를 타고 들어가는 오동도 방파제와 평탄한 해송 숲길 너머 펼쳐지는 시원한 다도해 풍경.'
+        title: '웅천 마리나 오션뷰 호캉스와 2일차 한정식/사우나',
+        description: '호텔 벨메르 슈페리어 스위트의 편안한 휴식, 통창 오션뷰 사우나, 그리고 여수 한일관 명품 해산물 한정식.'
       }
     ],
     createdAt: new Date(),
@@ -96,50 +96,74 @@ async function seedYeosuTrip() {
       date: new Date('2026-09-24T09:00:00Z'),
       activities: [
         {
-          time: '11:30 AM',
-          title: '꽃돌게장1번가 명품 점심 식사',
-          location: '꽃돌게장1번가 (봉산동)',
-          description: '알이 꽉 찬 꽃게장 정식(2인)과 왕갈치조림 정식(2인)으로 부모님 입맛을 돋우는 첫 식사',
-          costEstimate: 140000,
-          mapQuery: '꽃돌게장1번가'
+          time: '07:00 AM',
+          title: '금산인삼랜드휴게소 부모님 픽업',
+          location: '금산인삼랜드휴게소(하행)',
+          description: '부모님 댁(금산) 연계 픽업. 가벼운 스트레칭 후 탑승하여 순천완주고속도로 직행 (약 178km)',
+          costEstimate: 0,
+          mapQuery: '금산인삼랜드휴게소(하행)'
         },
         {
-          time: '01:30 PM',
-          title: '웅천친수공원 & 오션뷰 티타임',
-          location: '웅천친수공원',
-          description: '숙소 앞 웅천 마리나 요트 선착장과 평탄한 해안 산책로, 오션뷰 카페에서 여유로운 차 한 잔',
-          costEstimate: 35000,
-          mapQuery: '웅천친수공원'
+          time: '09:15 AM',
+          title: '순천만국가정원 관람 (관람차 & 호수정원)',
+          location: '순천만국가정원 동문',
+          description: '선선한 아침 타임 관람. 순환 관람차(전기차, 25분) 탑승으로 부모님 체력 안배, 호수정원 및 메타세쿼이아길 평지 산책 (순천만습지 당일 무료 연계)',
+          costEstimate: 30000,
+          mapQuery: '순천만국가정원'
         },
         {
-          time: '03:00 PM',
-          title: '여수 벨메르 한화리조트 체크인',
+          time: '11:35 AM',
+          title: '순천 낙원회관 남도 꼬막정식 점심',
+          location: '낙원회관 (순천 장천동)',
+          description: '삶은 통꼬막, 새콤달콤 꼬막무침, 꼬막전과 정갈한 남도 계절 밑반찬 4인 한상차림',
+          costEstimate: 88000,
+          mapQuery: '낙원회관'
+        },
+        {
+          time: '01:05 PM',
+          title: '순천만습지 황금 갈대밭 산책',
+          location: '순천만습지 (대대동)',
+          description: '무진교를 건너 평지 목재 데크 갈대숲길 힐링 산책 (계단 오르막 배제, 오전 국가정원 티켓으로 무료 입장)',
+          costEstimate: 0,
+          mapQuery: '순천만습지'
+        },
+        {
+          time: '03:15 PM',
+          title: '여수 벨메르 호텔 체크인 & 꿀잠 휴식',
           location: '호텔 벨메르 바이 한화호텔앤드리조트',
-          description: '슈페리어 스위트 객실 입실. 파노라마 바다 전망 감상 및 장거리 이동 피로를 푸는 낮잠 휴식',
+          description: '슈페리어 스위트 객실 입실. 새벽 장거리 운전 피로 회복을 위한 2시간 15분 낮잠 및 파노라마 오션뷰 휴식',
           costEstimate: 0,
           mapQuery: '호텔 벨메르 바이 한화호텔앤드리조트'
         },
         {
-          time: '05:30 PM',
-          title: '경도회관 9월 제철 하모 샤브샤브 만찬',
-          location: '경도회관 국동점',
-          description: '여수 최고의 가을 보양식 갯장어(하모) 샤브샤브 4인 대(大)자 코스와 칼국수',
-          costEstimate: 180000,
-          mapQuery: '경도회관 국동점'
+          time: '05:50 PM',
+          title: '이순신광장 핫플 먹거리 투어 & 저녁 만찬',
+          location: '이순신광장',
+          description: '택시 이동(운전/주차 스트레스 제로). 2인 1조 분업 픽업(바다김밥, 구봉만두, 좌수영바게트버거, 서녹씨 딸기모찌, 이순신버거) 후 바다 벤치 만찬 및 여수당 쑥아이스크림 후식',
+          costEstimate: 98500,
+          mapQuery: '이순신광장'
         },
         {
           time: '07:30 PM',
-          title: '돌산공원 전망대 & 돌산대교 야경',
-          location: '돌산공원',
-          description: '걷지 않고 주차장 바로 앞에서 조망하는 형형색색 돌산대교와 여수 밤바다 파노라마 드라이브',
-          costEstimate: 0,
-          mapQuery: '돌산공원'
+          title: '여수엑스포 빅오 해상분수쇼 관람',
+          location: '여수엑스포 빅오 해상무대',
+          description: '택시로 이동. 바다 위에서 펼쳐지는 화려한 음악·조명 분수쇼 무료 관람 (20:00~20:30, 30분간 진행)',
+          costEstimate: 4500,
+          mapQuery: '빅오 해상분수쇼'
         },
         {
-          time: '09:00 PM',
-          title: '리조트 복귀 및 가족 다과 타임',
+          time: '08:35 PM',
+          title: '종포해양공원 & 하멜등대 야경 산책 후 복귀',
+          location: '하멜등대 & 종포해양공원',
+          description: '낭만포차 거리, 붉은 하멜등대, 오색 거북선대교 야경 감상 후 택시로 호텔 벨메르 복귀',
+          costEstimate: 8500,
+          mapQuery: '하멜등대'
+        },
+        {
+          time: '09:30 PM',
+          title: '호텔 테라스 티타임 및 휴식',
           location: '호텔 벨메르 바이 한화호텔앤드리조트',
-          description: '스위트 거실에서 부모님과 나누는 따뜻한 차와 과일, 편안한 취침',
+          description: '포장 디저트와 함께 즐기는 웅천 요트마리나 밤바다 티타임 및 편안한 취침',
           costEstimate: 20000,
           mapQuery: '호텔 벨메르 바이 한화호텔앤드리조트'
         }
@@ -226,20 +250,21 @@ async function seedYeosuTrip() {
   await batch2.commit();
 
   const budgetData = {
-    totalBudget: 1333000, // 1,333,000 KRW
+    totalBudget: 1211000, // 1,211,000 KRW
     currency: 'KRW',
     expenses: [
       { id: 'exp_ys_1', category: 'accommodation', amount: 420000, description: '여수 벨메르 바이 한화리조트 슈페리어 스위트 (1박, 4인 조식 뷔페 포함)', date: new Date('2026-09-24T00:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_2', category: 'food', amount: 140000, description: '1일차 점심 꽃돌게장 1번가 (꽃게정식 2인 + 왕갈치조림 2인)', date: new Date('2026-09-24T12:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_3', category: 'food', amount: 35000, description: '1일차 웅천 마리나 오션뷰 베이커리 카페 음료 4잔 및 디저트', date: new Date('2026-09-24T14:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_4', category: 'food', amount: 180000, description: '1일차 저녁 경도회관 국동점 하모(갯장어) 샤브샤브 대(大)자 4인 만찬', date: new Date('2026-09-24T18:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_5', category: 'food', amount: 20000, description: '1일차 리조트 스위트룸 과일 및 다과', date: new Date('2026-09-24T21:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_6', category: 'activity', amount: 40000, description: '2일차 벨메르 오션뷰 통창 사우나 4인 (투숙객 할인)', date: new Date('2026-09-25T09:30:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_7', category: 'activity', amount: 8000, description: '2일차 오동도 동백열차 4인 왕복 탑승권', date: new Date('2026-09-25T11:30:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_8', category: 'food', amount: 200000, description: '2일차 점심 여수 한일관 본점 명품 해산물 남도 한정식 4인 코스', date: new Date('2026-09-25T13:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_9', category: 'shopping', amount: 120000, description: '여수 돌산 갓김치 선물 택배 주문(8만원) 및 이순신광장 딸기모찌(4만원)', date: new Date('2026-09-25T15:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_10', category: 'transport', amount: 120000, description: '차량 왕복 주유비 및 고속도로 통행료', date: new Date('2026-09-24T09:00:00Z'), paidBy: ownerId },
-      { id: 'exp_ys_11', category: 'shopping', amount: 50000, description: '현장 음료 및 돌발 지출 대비 예비비', date: new Date('2026-09-25T16:00:00Z'), paidBy: ownerId }
+      { id: 'exp_ys_2', category: 'activity', amount: 30000, description: '1일차 순천만국가정원 입장료(성인 2인 2만원/경로 2인 무료) 및 순환 관람차 4인(1만원)', date: new Date('2026-09-24T09:30:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_3', category: 'food', amount: 88000, description: '1일차 점심 순천 낙원회관 남도 꼬막정식 4인 한상차림', date: new Date('2026-09-24T12:00:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_4', category: 'food', amount: 90000, description: '1일차 저녁 이순신광장 7대 먹거리 포장 투어 (바다김밥, 구봉만두, 좌수영바게트버거, 서녹씨, 여수당 등)', date: new Date('2026-09-24T18:30:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_5', category: 'transport', amount: 25000, description: '1일차 저녁 여수 시내 택시비 3회 (벨메르 ➔ 광장 ➔ 엑스포 ➔ 벨메르 복귀)', date: new Date('2026-09-24T20:00:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_6', category: 'food', amount: 20000, description: '1일차 야식/음료 벨메르 로비 폴 바셋 음료 및 객실 과일', date: new Date('2026-09-24T21:30:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_7', category: 'activity', amount: 40000, description: '2일차 벨메르 오션뷰 통창 사우나 4인 (투숙객 할인)', date: new Date('2026-09-25T09:30:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_8', category: 'activity', amount: 8000, description: '2일차 오동도 동백열차 4인 왕복 탑승권', date: new Date('2026-09-25T11:30:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_9', category: 'food', amount: 200000, description: '2일차 점심 여수 한일관 본점 명품 해산물 남도 한정식 4인 코스', date: new Date('2026-09-25T13:00:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_10', category: 'shopping', amount: 120000, description: '여수 돌산 갓김치 선물 택배 주문(8만원) 및 이순신광장 선물용 디저트/모찌(4만원)', date: new Date('2026-09-25T15:00:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_11', category: 'transport', amount: 120000, description: '차량 왕복 주유비 및 고속도로 통행료', date: new Date('2026-09-24T09:00:00Z'), paidBy: ownerId },
+      { id: 'exp_ys_12', category: 'shopping', amount: 50000, description: '현장 음료 및 돌발 지출 대비 예비비', date: new Date('2026-09-25T16:00:00Z'), paidBy: ownerId }
     ],
     createdAt: new Date(),
     updatedAt: new Date()
